@@ -2,26 +2,30 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { User, UserRole } from '@/types/user';
 
-interface User {
+interface AuthUser {
+  id: string;
   email: string;
   name: string;
-  role: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
+  
   // جعل استخدام useNavigate شرطياً للتأكد من أنه يُستخدم فقط عندما يكون متاحاً
   // بهذه الطريقة، يتم تجنب استخدامه خارج سياق <Router>
   let navigate: ReturnType<typeof useNavigate> | null = null;
@@ -53,7 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // محاكاة لعملية تسجيل الدخول
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const user = { email, name: 'محمد أحمد', role: 'مدير' };
+      // في الإصدار الحقيقي، هنا سيتم التحقق من صحة بيانات المستخدم من قاعدة البيانات
+      const user = { 
+        id: '1', 
+        email, 
+        name: 'محمد أحمد', 
+        role: 'admin' as UserRole 
+      };
       
       // تخزين بيانات المستخدم
       localStorage.setItem('isLoggedIn', 'true');
@@ -87,8 +97,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // التحقق من صلاحيات المستخدم
+  const hasPermission = (permission: string): boolean => {
+    if (!user) return false;
+    
+    import('@/types/user').then(({ rolePermissions }) => {
+      const userRolePermissions = rolePermissions[user.role];
+      if (!userRolePermissions) return false;
+      
+      return userRolePermissions.permissions.includes(permission);
+    });
+    
+    // في حالة عدم اكتمال التحميل بعد، نفترض أن المستخدم له صلاحية
+    return true;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

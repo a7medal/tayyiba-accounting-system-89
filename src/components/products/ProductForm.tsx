@@ -19,6 +19,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { Product } from '@/types/product';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +55,7 @@ export function ProductForm({
       cost: initialData?.cost || 0,
       stock: initialData?.stock || 0,
       imageUrl: initialData?.imageUrl || '',
+      currency: initialData?.currency || 'MRU',
     },
   });
 
@@ -119,7 +127,7 @@ export function ProductForm({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
               <FormField
                 control={form.control}
                 name="price"
@@ -155,6 +163,31 @@ export function ProductForm({
                     <FormControl>
                       <Input type="number" placeholder="0" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>العملة</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر العملة" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="MRU">أوقية جديدة (MRU)</SelectItem>
+                        <SelectItem value="MRO">أوقية قديمة (MRO)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

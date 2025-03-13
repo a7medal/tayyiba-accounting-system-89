@@ -12,7 +12,8 @@ import {
   Menu,
   ChevronRight,
   LogOut,
-  Package
+  Package,
+  UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -50,11 +51,13 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div
@@ -129,6 +132,15 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             >
               المنتجات
             </SidebarLink>
+            {isAdmin && (
+              <SidebarLink 
+                to="/users" 
+                icon={<UserCog className="h-5 w-5" />}
+                isActive={isActive("/users")}
+              >
+                المستخدمين
+              </SidebarLink>
+            )}
             <SidebarLink 
               to="/settings" 
               icon={<Settings className="h-5 w-5" />}
@@ -195,6 +207,16 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <Package className="h-5 w-5" />
               </Link>
             </div>
+            {isAdmin && (
+              <div className="py-1.5 flex justify-center">
+                <Link to="/users" className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/users") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
+                )}>
+                  <UserCog className="h-5 w-5" />
+                </Link>
+              </div>
+            )}
             <div className="py-1.5 flex justify-center">
               <Link to="/settings" className={cn(
                 "p-2 rounded-lg transition-all duration-300",

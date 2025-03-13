@@ -6,6 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/hooks/use-theme";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
@@ -14,6 +21,7 @@ export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [companyName, setCompanyName] = useState("شركة طيبة للمحاسبة");
   const [taxNumber, setTaxNumber] = useState("123456789");
+  const [defaultCurrency, setDefaultCurrency] = useState("MRU");
   
   const handleSaveGeneral = () => {
     toast({
@@ -46,6 +54,7 @@ export default function Settings() {
           <TabsTrigger value="appearance">المظهر</TabsTrigger>
           <TabsTrigger value="notifications">الإشعارات</TabsTrigger>
           <TabsTrigger value="security">الأمان</TabsTrigger>
+          <TabsTrigger value="currency">العملة</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -80,14 +89,18 @@ export default function Settings() {
                 <div className="grid gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="currency">العملة الافتراضية</Label>
-                    <select
-                      id="currency"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    <Select
+                      value={defaultCurrency}
+                      onValueChange={setDefaultCurrency}
                     >
-                      <option value="SAR">ريال سعودي (SAR)</option>
-                      <option value="USD">دولار أمريكي (USD)</option>
-                      <option value="EUR">يورو (EUR)</option>
-                    </select>
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="اختر العملة الافتراضية" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MRU">أوقية جديدة (MRU)</SelectItem>
+                        <SelectItem value="MRO">أوقية قديمة (MRO)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="taxRate">معدل الضريبة (%)</Label>
@@ -95,7 +108,7 @@ export default function Settings() {
                       id="taxRate"
                       type="number"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                      defaultValue="15"
+                      defaultValue="16"
                     />
                   </div>
                 </div>
@@ -248,6 +261,93 @@ export default function Settings() {
               </div>
               
               <Button>تغيير كلمة المرور</Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="currency">
+          <div className="card-glass rounded-xl p-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-4">إعدادات العملة</h3>
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label>العملة الافتراضية</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border rounded-lg p-4 bg-background">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+                            <span className="font-bold">MRU</span>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium">الأوقية الجديدة</h4>
+                            <p className="text-xs text-muted-foreground">أوقية موريتانية (MRU)</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-sm">
+                          <p>تم إطلاقها في 2018</p>
+                          <p className="text-muted-foreground">1 MRU = 10 MRO</p>
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4 bg-background">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+                            <span className="font-bold">MRO</span>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium">الأوقية القديمة</h4>
+                            <p className="text-xs text-muted-foreground">أوقية موريتانية قديمة (MRO)</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-sm">
+                          <p>استخدمت قبل 2018</p>
+                          <p className="text-muted-foreground">10 MRO = 1 MRU</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="exchangeRate">معدل التحويل (MRO إلى MRU)</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="exchangeRate"
+                        type="number"
+                        disabled
+                        className="flex h-10 w-full max-w-56 rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        value="0.1"
+                      />
+                      <span className="text-muted-foreground">(1 MRO = 0.1 MRU)</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="conversionExample">مثال على التحويل</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex gap-4 items-center">
+                        <input
+                          type="number"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                          placeholder="1000"
+                        />
+                        <span>MRO</span>
+                      </div>
+                      <div className="flex gap-4 items-center">
+                        <span>=</span>
+                        <input
+                          type="number"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                          placeholder="100"
+                        />
+                        <span>MRU</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <Button>حفظ إعدادات العملة</Button>
             </div>
           </div>
         </TabsContent>

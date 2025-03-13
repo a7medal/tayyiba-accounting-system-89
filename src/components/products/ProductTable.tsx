@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { Product } from '@/types/product';
+import { Product, formatCurrency } from '@/types/product';
 
 interface ProductTableProps {
   products: Product[];
@@ -37,6 +37,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
             <TableHead>السعر</TableHead>
             <TableHead>التكلفة</TableHead>
             <TableHead>المخزون</TableHead>
+            <TableHead>العملة</TableHead>
             <TableHead>الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
@@ -45,10 +46,15 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
             <TableRow key={product.id}>
               <TableCell className="font-medium">{product.name}</TableCell>
               <TableCell>{product.sku}</TableCell>
-              <TableCell>{product.price} ر.س</TableCell>
-              <TableCell>{product.cost} ر.س</TableCell>
+              <TableCell>{formatCurrency(product.price, product.currency)}</TableCell>
+              <TableCell>{formatCurrency(product.cost, product.currency)}</TableCell>
               <TableCell className={product.stock <= 5 ? 'text-destructive' : ''}>
                 {product.stock} وحدة
+              </TableCell>
+              <TableCell>
+                <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">
+                  {product.currency}
+                </span>
               </TableCell>
               <TableCell>
                 <div className="flex space-x-2">
