@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { Product } from '@/types/product';
+import { Product, formatCurrency } from '@/types/product';
 
 interface ProductCardProps {
   product: Product;
@@ -44,7 +44,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">السعر:</span>
-            <span className="font-medium">{product.price} ر.س</span>
+            <span className="font-medium">{formatCurrency(product.price, product.currency)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">المخزون:</span>

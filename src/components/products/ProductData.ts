@@ -14,7 +14,8 @@ export const mockProducts: Product[] = [
     categoryId: '1',
     imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
     createdAt: '2023-04-15T08:00:00Z',
-    updatedAt: '2023-04-15T08:00:00Z'
+    updatedAt: '2023-04-15T08:00:00Z',
+    currency: 'MRU'
   },
   {
     id: '2',
@@ -27,7 +28,8 @@ export const mockProducts: Product[] = [
     categoryId: '2',
     imageUrl: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901',
     createdAt: '2023-04-16T09:30:00Z',
-    updatedAt: '2023-04-16T09:30:00Z'
+    updatedAt: '2023-04-16T09:30:00Z',
+    currency: 'MRU'
   },
   {
     id: '3',
@@ -40,7 +42,8 @@ export const mockProducts: Product[] = [
     categoryId: '3',
     imageUrl: 'https://images.unsplash.com/photo-1466721591366-2d5fba72006d',
     createdAt: '2023-04-17T10:45:00Z',
-    updatedAt: '2023-04-17T10:45:00Z'
+    updatedAt: '2023-04-17T10:45:00Z',
+    currency: 'MRU'
   },
   {
     id: '4',
@@ -53,7 +56,8 @@ export const mockProducts: Product[] = [
     categoryId: '4',
     imageUrl: '',
     createdAt: '2023-04-18T11:15:00Z',
-    updatedAt: '2023-04-18T11:15:00Z'
+    updatedAt: '2023-04-18T11:15:00Z',
+    currency: 'MRU'
   },
   {
     id: '5',
@@ -66,7 +70,8 @@ export const mockProducts: Product[] = [
     categoryId: '5',
     imageUrl: '',
     createdAt: '2023-04-19T12:30:00Z',
-    updatedAt: '2023-04-19T12:30:00Z'
+    updatedAt: '2023-04-19T12:30:00Z',
+    currency: 'MRU'
   },
   {
     id: '6',
@@ -79,7 +84,8 @@ export const mockProducts: Product[] = [
     categoryId: '6',
     imageUrl: '',
     createdAt: '2023-04-20T13:45:00Z',
-    updatedAt: '2023-04-20T13:45:00Z'
+    updatedAt: '2023-04-20T13:45:00Z',
+    currency: 'MRU'
   }
 ];
 

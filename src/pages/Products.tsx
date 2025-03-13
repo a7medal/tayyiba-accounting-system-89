@@ -79,6 +79,7 @@ export default function Products() {
         imageUrl: data.imageUrl,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        currency: data.currency || 'MRU', // إضافة العملة الافتراضية
       };
       setProducts([newProduct, ...products]);
     }
