@@ -1,10 +1,23 @@
 
 import { useState } from 'react';
-import { Bell, Search, ChevronDown } from 'lucide-react';
+import { Bell, Search, ChevronDown, Sun, Moon, LogOut, User, Settings as SettingsIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
   return (
     <div className="h-16 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between px-6">
@@ -20,6 +33,18 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-4">
+        <button 
+          onClick={toggleTheme}
+          className="p-2 rounded-full hover:bg-accent transition-colors duration-200"
+          aria-label={theme === 'dark' ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-5 w-5 text-foreground" />
+          ) : (
+            <Moon className="h-5 w-5 text-foreground" />
+          )}
+        </button>
+      
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
@@ -66,16 +91,37 @@ export function Header() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors duration-200">
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">م</span>
-          </div>
-          <div className="text-sm">
-            <div className="font-medium">محمد أحمد</div>
-            <div className="text-xs text-muted-foreground">مدير</div>
-          </div>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors duration-200">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium text-primary">
+                  {user?.name.charAt(0) || 'م'}
+                </span>
+              </div>
+              <div className="text-sm">
+                <div className="font-medium">{user?.name || 'محمد أحمد'}</div>
+                <div className="text-xs text-muted-foreground">{user?.role || 'مدير'}</div>
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/profile')}>
+              <User className="h-4 w-4" />
+              <span>الملف الشخصي</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/settings')}>
+              <SettingsIcon className="h-4 w-4" />
+              <span>الإعدادات</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive" onClick={logout}>
+              <LogOut className="h-4 w-4" />
+              <span>تسجيل الخروج</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
