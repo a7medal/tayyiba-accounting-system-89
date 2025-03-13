@@ -16,26 +16,27 @@ const last6Months = Array.from({ length: 6 }, (_, i) => {
 });
 
 const salesData = [
-  { name: last6Months[0], value: 12500 },
-  { name: last6Months[1], value: 18200 },
-  { name: last6Months[2], value: 15800 },
-  { name: last6Months[3], value: 22000 },
-  { name: last6Months[4], value: 19500 },
-  { name: last6Months[5], value: 25000 },
+  { name: last6Months[0], value: 12500, color: '#3B82F6' },
+  { name: last6Months[1], value: 18200, color: '#3B82F6' },
+  { name: last6Months[2], value: 15800, color: '#3B82F6' },
+  { name: last6Months[3], value: 22000, color: '#3B82F6' },
+  { name: last6Months[4], value: 19500, color: '#3B82F6' },
+  { name: last6Months[5], value: 25000, color: '#3B82F6' },
 ];
 
 const expensesData = [
-  { name: last6Months[0], value: 8200 },
-  { name: last6Months[1], value: 9500 },
-  { name: last6Months[2], value: 7800 },
-  { name: last6Months[3], value: 10200 },
-  { name: last6Months[4], value: 11000 },
-  { name: last6Months[5], value: 12500 },
+  { name: last6Months[0], value: 8200, color: '#F59E0B' },
+  { name: last6Months[1], value: 9500, color: '#F59E0B' },
+  { name: last6Months[2], value: 7800, color: '#F59E0B' },
+  { name: last6Months[3], value: 10200, color: '#F59E0B' },
+  { name: last6Months[4], value: 11000, color: '#F59E0B' },
+  { name: last6Months[5], value: 12500, color: '#F59E0B' },
 ];
 
 const profitData = salesData.map((item, index) => ({
   name: item.name,
-  value: item.value - expensesData[index].value
+  value: item.value - expensesData[index].value,
+  color: '#10B981'
 }));
 
 const revenueByCategory = [
