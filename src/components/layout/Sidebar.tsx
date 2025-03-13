@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -10,7 +11,8 @@ import {
   Settings,
   Menu,
   ChevronRight,
-  LogOut
+  LogOut,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -121,6 +123,13 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               العملاء
             </SidebarLink>
             <SidebarLink 
+              to="/products" 
+              icon={<Package className="h-5 w-5" />}
+              isActive={isActive("/products")}
+            >
+              المنتجات
+            </SidebarLink>
+            <SidebarLink 
               to="/settings" 
               icon={<Settings className="h-5 w-5" />}
               isActive={isActive("/settings")}
@@ -176,6 +185,14 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 isActive("/clients") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
               )}>
                 <Users className="h-5 w-5" />
+              </Link>
+            </div>
+            <div className="py-1.5 flex justify-center">
+              <Link to="/products" className={cn(
+                "p-2 rounded-lg transition-all duration-300",
+                isActive("/products") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
+              )}>
+                <Package className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">

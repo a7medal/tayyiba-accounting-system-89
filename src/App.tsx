@@ -15,6 +15,7 @@ import Clients from "@/pages/Clients";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
+import Products from "@/pages/Products";
 import { AuthProvider } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/products" element={<Products />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
               
