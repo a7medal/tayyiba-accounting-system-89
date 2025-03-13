@@ -22,7 +22,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  // جعل استخدام useNavigate شرطياً للتأكد من أنه يُستخدم فقط عندما يكون متاحاً
+  // بهذه الطريقة، يتم تجنب استخدامه خارج سياق <Router>
+  let navigate: ReturnType<typeof useNavigate> | null = null;
+  try {
+    navigate = useNavigate();
+  } catch (error) {
+    // لا نفعل شيء إذا كان useNavigate غير متاح
+    console.log('Router context not available');
+  }
 
   useEffect(() => {
     // التحقق من حالة المصادقة عند تحميل التطبيق
@@ -73,7 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       description: "تم تسجيل خروجك بنجاح من النظام",
     });
     
-    navigate('/login');
+    // التحقق من وجود وظيفة التنقل قبل استخدامها
+    if (navigate) {
+      navigate('/login');
+    }
   };
 
   return (

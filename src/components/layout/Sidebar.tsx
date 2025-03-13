@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -14,6 +13,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 interface SidebarLinkProps {
   to: string;
@@ -48,6 +48,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
+  const { logout } = useAuth();
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -191,12 +192,18 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
 
       <div className="absolute bottom-4 w-full px-3">
         {!collapsed ? (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-accent/50 cursor-pointer transition-all duration-300">
+          <div 
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-accent/50 cursor-pointer transition-all duration-300"
+            onClick={logout}
+          >
             <LogOut className="h-5 w-5" />
             <span>تسجيل الخروج</span>
           </div>
         ) : (
-          <div className="flex justify-center">
+          <div 
+            className="flex justify-center"
+            onClick={logout}
+          >
             <div className="p-2 rounded-lg text-destructive hover:bg-accent/50 cursor-pointer transition-all duration-300">
               <LogOut className="h-5 w-5" />
             </div>
