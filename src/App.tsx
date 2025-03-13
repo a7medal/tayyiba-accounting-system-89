@@ -17,6 +17,8 @@ import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import Products from "@/pages/Products";
 import Users from "@/pages/Users";
+import Suppliers from "@/pages/Suppliers";
+import Purchases from "@/pages/Purchases";
 import { AuthProvider } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ const App = () => (
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/suppliers" element={<Suppliers />} />
+                <Route path="/purchases" element={<Purchases />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
               

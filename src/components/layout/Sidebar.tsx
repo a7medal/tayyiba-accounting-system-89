@@ -13,7 +13,9 @@ import {
   ChevronRight,
   LogOut,
   Package,
-  UserCog
+  UserCog,
+  Truck,
+  ShoppingCart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -51,13 +53,15 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, user, hasPermission } = useAuth();
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
   const isAdmin = user?.role === 'admin';
+  const canViewSuppliers = hasPermission('عرض الموردين');
+  const canViewPurchases = hasPermission('عرض المشتريات');
 
   return (
     <div
@@ -104,6 +108,24 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             >
               المعاملات
             </SidebarLink>
+            {canViewSuppliers && (
+              <SidebarLink 
+                to="/suppliers" 
+                icon={<Truck className="h-5 w-5" />}
+                isActive={isActive("/suppliers")}
+              >
+                الموردين
+              </SidebarLink>
+            )}
+            {canViewPurchases && (
+              <SidebarLink 
+                to="/purchases" 
+                icon={<ShoppingCart className="h-5 w-5" />}
+                isActive={isActive("/purchases")}
+              >
+                المشتريات
+              </SidebarLink>
+            )}
             <SidebarLink 
               to="/reports" 
               icon={<BarChart4 className="h-5 w-5" />}
@@ -175,6 +197,26 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <Wallet className="h-5 w-5" />
               </Link>
             </div>
+            {canViewSuppliers && (
+              <div className="py-1.5 flex justify-center">
+                <Link to="/suppliers" className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/suppliers") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
+                )}>
+                  <Truck className="h-5 w-5" />
+                </Link>
+              </div>
+            )}
+            {canViewPurchases && (
+              <div className="py-1.5 flex justify-center">
+                <Link to="/purchases" className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/purchases") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
+                )}>
+                  <ShoppingCart className="h-5 w-5" />
+                </Link>
+              </div>
+            )}
             <div className="py-1.5 flex justify-center">
               <Link to="/reports" className={cn(
                 "p-2 rounded-lg transition-all duration-300",
