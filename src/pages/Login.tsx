@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,11 +15,11 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // في الوضع التجريبي، نسمح بتسجيل الدخول بأي بيانات
     if (!email || !password) {
       toast({
         title: "خطأ في تسجيل الدخول",
@@ -30,12 +31,7 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // محاكاة لعملية تسجيل الدخول
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // تخزين حالة تسجيل الدخول في localStorage
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('user', JSON.stringify({ email, name: 'محمد أحمد', role: 'مدير' }));
+      await login(email, password);
       
       toast({
         title: "تم تسجيل الدخول بنجاح",
@@ -58,7 +54,9 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-8 card-glass rounded-2xl">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary">طيبة</h1>
+          <div className="flex justify-center mb-4">
+            <img src="/lovable-uploads/61739e53-4aa6-418e-82ac-bacdebef5918.png" alt="شعار طيبة" className="h-32" />
+          </div>
           <p className="mt-2 text-muted-foreground">نظام المحاسبة المتكامل</p>
         </div>
         

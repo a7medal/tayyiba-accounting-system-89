@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { User, UserRole } from '@/types/user';
+import { User, UserRole, rolePermissions } from '@/types/user';
 
 interface AuthUser {
   id: string;
@@ -26,13 +26,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
   
-  // جعل استخدام useNavigate شرطياً للتأكد من أنه يُستخدم فقط عندما يكون متاحاً
-  // بهذه الطريقة، يتم تجنب استخدامه خارج سياق <Router>
   let navigate: ReturnType<typeof useNavigate> | null = null;
   try {
     navigate = useNavigate();
   } catch (error) {
-    // لا نفعل شيء إذا كان useNavigate غير متاح
     console.log('Router context not available');
   }
 
@@ -101,15 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
     
-    import('@/types/user').then(({ rolePermissions }) => {
-      const userRolePermissions = rolePermissions[user.role];
-      if (!userRolePermissions) return false;
-      
-      return userRolePermissions.permissions.includes(permission);
-    });
+    const userRolePermissions = rolePermissions[user.role];
+    if (!userRolePermissions) return false;
     
-    // في حالة عدم اكتمال التحميل بعد، نفترض أن المستخدم له صلاحية
-    return true;
+    return userRolePermissions.permissions.includes(permission);
   };
 
   return (
