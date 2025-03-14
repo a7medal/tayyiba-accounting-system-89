@@ -20,6 +20,7 @@ import Users from "@/pages/Users";
 import Suppliers from "@/pages/Suppliers";
 import Purchases from "@/pages/Purchases";
 import GazaTelecom from "@/pages/GazaTelecom";
+import Accounts from "@/pages/Accounts";
 import { AuthProvider } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/transactions" element={<Transactions />} />
+                <Route path="/accounts" element={<Accounts />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/clients" element={<Clients />} />

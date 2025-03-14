@@ -16,7 +16,8 @@ import {
   UserCog,
   Truck,
   ShoppingCart,
-  Send
+  Send,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -121,6 +122,13 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               المعاملات
             </SidebarLink>
             <SidebarLink 
+              to="/accounts" 
+              icon={<CreditCard className="h-5 w-5" />}
+              isActive={isActive("/accounts")}
+            >
+              الحسابات
+            </SidebarLink>
+            <SidebarLink 
               to="/gaza-telecom" 
               icon={<Send className="h-5 w-5" />}
               isActive={isActive("/gaza-telecom")}
@@ -214,6 +222,14 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 isActive("/transactions") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
               )}>
                 <Wallet className="h-5 w-5" />
+              </Link>
+            </div>
+            <div className="py-1.5 flex justify-center">
+              <Link to="/accounts" className={cn(
+                "p-2 rounded-lg transition-all duration-300",
+                isActive("/accounts") ? "bg-accent text-primary" : "text-foreground/70 hover:bg-accent/50"
+              )}>
+                <CreditCard className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
