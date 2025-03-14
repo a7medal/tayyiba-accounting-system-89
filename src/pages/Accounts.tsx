@@ -119,10 +119,14 @@ const Accounts = () => {
       );
       toast.success('تم تحديث الحساب بنجاح');
     } else {
-      // إضافة حساب جديد
+      // إضافة حساب جديد - نتأكد أن جميع الحقول المطلوبة موجودة
       const newAccount: Account = {
         id: Date.now().toString(),
-        ...values
+        name: values.name,
+        type: values.type,
+        balance: values.balance,
+        currency: values.currency || 'أوقية',
+        description: values.description
       };
       setAccounts(prev => [...prev, newAccount]);
       toast.success('تم إضافة الحساب بنجاح');
