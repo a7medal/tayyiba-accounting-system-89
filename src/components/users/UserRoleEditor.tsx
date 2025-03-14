@@ -41,7 +41,7 @@ export function UserRoleEditor({
   if (!user) return null;
   
   // تجميع الصلاحيات حسب النوع
-  const permissionGroups = {
+  const permissionGroups: Record<string, Permission[]> = {
     management: [
       'إدارة المستخدمين', 
       'إدارة المنتجات', 
@@ -51,7 +51,7 @@ export function UserRoleEditor({
       'إدارة الإعدادات',
       'إدارة الموردين',
       'إدارة المشتريات'
-    ],
+    ] as Permission[],
     view: [
       'عرض المنتجات',
       'عرض الفواتير',
@@ -60,7 +60,7 @@ export function UserRoleEditor({
       'عرض المعاملات',
       'عرض الموردين',
       'عرض المشتريات'
-    ]
+    ] as Permission[]
   };
   
   // الحصول على جميع الصلاحيات المتاحة في النظام
