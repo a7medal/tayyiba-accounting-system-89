@@ -21,6 +21,8 @@ import Suppliers from "@/pages/Suppliers";
 import Purchases from "@/pages/Purchases";
 import GazaTelecom from "@/pages/GazaTelecom";
 import Accounts from "@/pages/Accounts";
+import Bonds from "@/pages/Bonds";
+import Profile from "@/pages/Profile";
 import { AuthProvider } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,7 @@ const App = () => (
               >
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/invoices" element={<Invoices />} />
+                <Route path="/bonds" element={<Bonds />} />
                 <Route path="/transactions" element={<Transactions />} />
                 <Route path="/accounts" element={<Accounts />} />
                 <Route path="/reports" element={<Reports />} />
@@ -61,6 +64,7 @@ const App = () => (
                 <Route path="/suppliers" element={<Suppliers />} />
                 <Route path="/purchases" element={<Purchases />} />
                 <Route path="/gaza-telecom" element={<GazaTelecom />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
               

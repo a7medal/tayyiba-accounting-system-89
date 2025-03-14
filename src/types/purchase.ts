@@ -11,7 +11,7 @@ export interface PurchaseItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  currency: 'MRO' | 'MRU';
+  currency: 'MRU';
 }
 
 export interface Purchase {
@@ -23,7 +23,7 @@ export interface Purchase {
   items: PurchaseItem[];
   totalAmount: number;
   paidAmount: number;
-  currency: 'MRO' | 'MRU';
+  currency: 'MRU';
   paymentStatus: PaymentStatus;
   notes?: string;
   createdAt: string;

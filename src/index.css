@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -111,6 +112,11 @@ html {
   font-family: 'Cairo', system-ui, sans-serif;
 }
 
+/* Fix for icon visibility in light mode */
+.sidebar svg {
+  color: inherit;
+}
+
 /* Logo Animation */
 .logo-pulse {
   animation: logo-pulse 3s infinite alternate;
@@ -131,10 +137,13 @@ html {
     visibility: hidden;
   }
   .invoice-print-section, 
-  .invoice-print-section * {
+  .invoice-print-section *,
+  .bond-print-section,
+  .bond-print-section * {
     visibility: visible;
   }
-  .invoice-print-section {
+  .invoice-print-section,
+  .bond-print-section {
     position: absolute;
     left: 0;
     top: 0;

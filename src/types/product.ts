@@ -16,21 +16,10 @@ export interface Product {
   imageUrl?: string;
   createdAt: string;
   updatedAt: string;
-  currency: 'MRO' | 'MRU'; // الأوقية الموريتانية القديمة أو الجديدة
+  currency: 'MRU'; // الأوقية الموريتانية
 }
 
-export const convertCurrency = (amount: number, from: 'MRO' | 'MRU', to: 'MRO' | 'MRU'): number => {
-  if (from === to) return amount;
-  
-  // 1 MRU = 10 MRO
-  if (from === 'MRO' && to === 'MRU') {
-    return amount / 10;
-  } else {
-    return amount * 10;
-  }
-};
-
-export const formatCurrency = (amount: number, currency: 'MRO' | 'MRU'): string => {
-  // تنسيق المبلغ بالعملة المحددة
-  return `${amount.toLocaleString('ar-MR')} ${currency}`;
+export const formatCurrency = (amount: number): string => {
+  // تنسيق المبلغ بالأوقية
+  return `${amount.toLocaleString('ar-MR')} أوقية`;
 };
