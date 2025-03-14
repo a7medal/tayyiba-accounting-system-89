@@ -1,10 +1,10 @@
 
 import { useState } from 'react';
-import { Bell, Search, ChevronDown, Sun, Moon, LogOut, User, Settings as SettingsIcon } from 'lucide-react';
+import { Bell, Search, ChevronDown, Sun, Moon, LogOut, User, Settings as SettingsIcon, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/hooks/use-auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,14 @@ export function Header() {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if we are on the invoices details page
+  const isInvoiceDetails = location.pathname === '/invoices' && document.querySelector('.invoice-print-section') !== null;
+  
+  const handlePrint = () => {
+    window.print();
+  };
   
   return (
     <div className="h-16 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between px-6">
@@ -33,24 +41,34 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-4">
+        {isInvoiceDetails && (
+          <button 
+            onClick={handlePrint}
+            className="p-2 rounded-full hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+            aria-label="طباعة الفاتورة"
+          >
+            <Printer className="h-5 w-5" />
+          </button>
+        )}
+      
         <button 
           onClick={toggleTheme}
-          className="p-2 rounded-full hover:bg-accent transition-colors duration-200"
+          className="p-2 rounded-full hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
           aria-label={theme === 'dark' ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
         >
           {theme === 'dark' ? (
-            <Sun className="h-5 w-5 text-foreground" />
+            <Sun className="h-5 w-5" />
           ) : (
-            <Moon className="h-5 w-5 text-foreground" />
+            <Moon className="h-5 w-5" />
           )}
         </button>
       
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-full hover:bg-accent transition-colors duration-200"
+            className="relative p-2 rounded-full hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
           >
-            <Bell className="h-5 w-5 text-foreground" />
+            <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive"></span>
           </button>
           
@@ -93,8 +111,8 @@ export function Header() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors duration-200">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200">
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
                 <span className="text-sm font-medium text-primary">
                   {user?.name.charAt(0) || 'م'}
                 </span>

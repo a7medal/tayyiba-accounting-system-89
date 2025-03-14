@@ -36,8 +36,8 @@ const SidebarLink = ({ to, icon, children, isActive, onClick }: SidebarLinkProps
       className={cn(
         "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300",
         isActive 
-          ? "bg-accent text-primary" 
-          : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+          ? "bg-sidebar-accent text-sidebar-foreground" 
+          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
       )}
       onClick={onClick}
     >
@@ -67,19 +67,30 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   return (
     <div
       className={cn(
-        "relative h-screen border-r border-border bg-card py-4 transition-all duration-300",
+        "relative h-screen border-r border-sidebar-border bg-sidebar py-4 transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >
       <div className="px-4 mb-8 flex items-center justify-between">
-        {!collapsed && (
-          <div className="text-xl font-bold text-primary animate-fade-in">
-            طيبة
-          </div>
+        {!collapsed ? (
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center logo-pulse">
+              <span className="text-xl font-bold text-white">ط</span>
+            </div>
+            <div className="text-xl font-bold text-white">
+              طيبة
+            </div>
+          </Link>
+        ) : (
+          <Link to="/" className="w-full flex justify-center">
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center logo-pulse">
+              <span className="text-xl font-bold text-white">ط</span>
+            </div>
+          </Link>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-md hover:bg-accent text-muted-foreground"
+          className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground"
         >
           {collapsed ? <ChevronRight className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
