@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserTable } from '@/components/users/UserTable';
 import { UserForm } from '@/components/users/UserForm';
-import { User } from '@/types/user';
+import { UserPermissions } from '@/components/users/UserPermissions';
+import { UserRoleEditor } from '@/components/users/UserRoleEditor';
+import { User, Permission } from '@/types/user';
 import { useToast } from '@/hooks/use-toast';
 import { Search } from 'lucide-react';
 
@@ -52,6 +54,9 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [permissionsUser, setPermissionsUser] = useState<User | null>(null);
+  const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+  const [isRoleEditorOpen, setIsRoleEditorOpen] = useState(false);
   const { toast } = useToast();
 
   const filteredUsers = users.filter(
@@ -107,6 +112,21 @@ export default function Users() {
     setIsOpen(true);
   };
 
+  const handleViewPermissions = (user: User) => {
+    setPermissionsUser(user);
+    setIsPermissionsOpen(true);
+  };
+
+  const handleEditPermissions = (user: User) => {
+    setPermissionsUser(user);
+    setIsRoleEditorOpen(true);
+  };
+
+  const handleUpdatePermissions = (userId: string, permissions: Permission[]) => {
+    // هنا يمكن إرسال الصلاحيات الجديدة إلى الخادم
+    console.log("تم تحديث صلاحيات المستخدم:", userId, permissions);
+  };
+
   const handleSubmit = (userData: Partial<User>) => {
     if (editingUser) {
       handleUpdateUser(userData);
@@ -143,6 +163,8 @@ export default function Users() {
         users={filteredUsers}
         onEdit={handleEdit}
         onDelete={handleDeleteUser}
+        onViewPermissions={handleViewPermissions}
+        onEditPermissions={handleEditPermissions}
       />
       
       <UserForm
@@ -150,6 +172,19 @@ export default function Users() {
         onOpenChange={setIsOpen}
         initialData={editingUser}
         onSubmit={handleSubmit}
+      />
+      
+      <UserPermissions
+        open={isPermissionsOpen}
+        onOpenChange={setIsPermissionsOpen}
+        user={permissionsUser}
+      />
+      
+      <UserRoleEditor
+        open={isRoleEditorOpen}
+        onOpenChange={setIsRoleEditorOpen}
+        user={permissionsUser}
+        onSave={handleUpdatePermissions}
       />
     </div>
   );

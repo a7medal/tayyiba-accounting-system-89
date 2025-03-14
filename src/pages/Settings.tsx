@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserProfile } from "@/components/users/UserProfile";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
@@ -48,14 +48,21 @@ export default function Settings() {
     <div className="animate-fade-in">
       <h1 className="text-2xl font-bold mb-6">الإعدادات</h1>
       
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs defaultValue="profile" className="w-full">
         <TabsList className="mb-6">
+          <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
           <TabsTrigger value="general">إعدادات عامة</TabsTrigger>
           <TabsTrigger value="appearance">المظهر</TabsTrigger>
           <TabsTrigger value="notifications">الإشعارات</TabsTrigger>
           <TabsTrigger value="security">الأمان</TabsTrigger>
           <TabsTrigger value="currency">العملة</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="profile">
+          <div className="card-glass rounded-xl p-6">
+            <UserProfile />
+          </div>
+        </TabsContent>
         
         <TabsContent value="general">
           <div className="card-glass rounded-xl p-6">
