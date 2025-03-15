@@ -182,9 +182,9 @@ export function TransferStats() {
     window.print();
   };
   
-  // Function to determine bar color based on value
-  const getBarColor = (entry: any) => {
-    return entry.balance >= 0 ? '#10b981' : '#ef4444';
+  // Function to determine bar color based on value - returns a static string for each bar
+  const getBarColor = (value: number): string => {
+    return value >= 0 ? '#10b981' : '#ef4444';
   };
   
   return (
@@ -420,7 +420,7 @@ export function TransferStats() {
                   <Bar 
                     dataKey="balance" 
                     name="الميزان"
-                    fill={getBarColor}
+                    fill={(data) => getBarColor(data.balance)}
                   />
                 </BarChart>
               </ResponsiveContainer>
