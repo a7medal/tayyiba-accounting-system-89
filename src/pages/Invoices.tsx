@@ -1,9 +1,21 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileSearch, Download, Edit, Printer, ArrowLeft } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
 
 // بيانات الفواتير النموذجية
 const dummyInvoices = [
@@ -72,11 +84,25 @@ const dummyInvoices = [
   }
 ];
 
+interface InvoiceFormData {
+  client: string;
+  amount: number;
+  dueDate: string;
+  items: { description: string; quantity: number; price: number }[];
+}
+
 export default function Invoices() {
   const [invoices, setInvoices] = useState(dummyInvoices);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState<null | any>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [newInvoiceData, setNewInvoiceData] = useState<InvoiceFormData>({
+    client: '',
+    amount: 0,
+    dueDate: new Date().toISOString().split('T')[0],
+    items: [{ description: '', quantity: 1, price: 0 }]
+  });
+  const { toast } = useToast();
 
   const filteredInvoices = activeTab === 'all' 
     ? invoices 
@@ -93,6 +119,60 @@ export default function Invoices() {
 
   const handlePrintInvoice = () => {
     window.print();
+  };
+
+  const handleAddInvoice = () => {
+    const newInvoice = {
+      id: invoices.length + 1,
+      number: `INV-${new Date().getFullYear()}-${(invoices.length + 1).toString().padStart(3, '0')}`,
+      client: newInvoiceData.client,
+      date: new Date().toISOString().split('T')[0],
+      dueDate: newInvoiceData.dueDate,
+      amount: newInvoiceData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0),
+      status: 'pending',
+      items: newInvoiceData.items
+    };
+    
+    setInvoices([...invoices, newInvoice]);
+    setNewInvoiceData({
+      client: '',
+      amount: 0,
+      dueDate: new Date().toISOString().split('T')[0],
+      items: [{ description: '', quantity: 1, price: 0 }]
+    });
+    
+    toast({
+      title: "تمت الإضافة",
+      description: "تمت إضافة الفاتورة الجديدة بنجاح",
+    });
+  };
+
+  const handleAddInvoiceItem = () => {
+    setNewInvoiceData({
+      ...newInvoiceData,
+      items: [...newInvoiceData.items, { description: '', quantity: 1, price: 0 }]
+    });
+  };
+
+  const handleRemoveInvoiceItem = (index: number) => {
+    const updatedItems = [...newInvoiceData.items];
+    updatedItems.splice(index, 1);
+    setNewInvoiceData({
+      ...newInvoiceData,
+      items: updatedItems
+    });
+  };
+
+  const handleChangeInvoiceItem = (index: number, field: 'description' | 'quantity' | 'price', value: string | number) => {
+    const updatedItems = [...newInvoiceData.items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      [field]: field === 'description' ? value : Number(value)
+    };
+    setNewInvoiceData({
+      ...newInvoiceData,
+      items: updatedItems
+    });
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -131,10 +211,119 @@ export default function Invoices() {
         <>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">الفواتير</h1>
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              فاتورة جديدة
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  فاتورة جديدة
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>إضافة فاتورة جديدة</DialogTitle>
+                  <DialogDescription>
+                    أدخل بيانات الفاتورة الجديدة
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="client">اسم العميل</Label>
+                      <Input 
+                        id="client"
+                        value={newInvoiceData.client}
+                        onChange={(e) => setNewInvoiceData({...newInvoiceData, client: e.target.value})}
+                        placeholder="أدخل اسم العميل"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="dueDate">تاريخ الاستحقاق</Label>
+                      <Input 
+                        id="dueDate"
+                        type="date"
+                        value={newInvoiceData.dueDate}
+                        onChange={(e) => setNewInvoiceData({...newInvoiceData, dueDate: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium">البنود</h3>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleAddInvoiceItem}
+                        >
+                          إضافة بند
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {newInvoiceData.items.map((item, index) => (
+                          <div key={index} className="grid grid-cols-12 gap-2 items-end">
+                            <div className="col-span-5">
+                              <Label htmlFor={`item-desc-${index}`}>الوصف</Label>
+                              <Input 
+                                id={`item-desc-${index}`}
+                                value={item.description}
+                                onChange={(e) => handleChangeInvoiceItem(index, 'description', e.target.value)}
+                                placeholder="وصف البند"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Label htmlFor={`item-qty-${index}`}>الكمية</Label>
+                              <Input 
+                                id={`item-qty-${index}`}
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => handleChangeInvoiceItem(index, 'quantity', e.target.value)}
+                                min={1}
+                              />
+                            </div>
+                            <div className="col-span-3">
+                              <Label htmlFor={`item-price-${index}`}>السعر</Label>
+                              <Input 
+                                id={`item-price-${index}`}
+                                type="number"
+                                value={item.price}
+                                onChange={(e) => handleChangeInvoiceItem(index, 'price', e.target.value)}
+                                min={0}
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm"
+                                className="w-full"
+                                onClick={() => handleRemoveInvoiceItem(index)}
+                                disabled={newInvoiceData.items.length <= 1}
+                              >
+                                حذف
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">المجموع:</span>
+                      <span>
+                        {newInvoiceData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} أوقية
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button onClick={handleAddInvoice}>إضافة الفاتورة</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="card-glass rounded-xl overflow-hidden">
@@ -240,14 +429,16 @@ export default function Invoices() {
               </div>
             </div>
             
-            <div className="mb-8 text-center print-only" style={{ display: 'none' }}>
-              <div className="flex justify-center items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                  <span className="text-lg font-bold text-primary-foreground">ط</span>
+            <div className="mb-8 border-b pb-6">
+              <div className="flex justify-center items-center gap-2 mb-2">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary-foreground">ط</span>
                 </div>
-                <h1 className="text-2xl font-bold">شركة طيبة</h1>
+                <h1 className="text-2xl font-bold">طيبة المدينة تلكوم</h1>
               </div>
-              <p className="text-sm text-muted-foreground">نواكشوط، موريتانيا | هاتف: 123456789 | البريد الإلكتروني: info@taibah.mr</p>
+              <p className="text-sm text-muted-foreground text-center">
+                نواكشوط، موريتانيا | هاتف: 22371138 / 41101138 | البريد الإلكتروني: taybaelmedintelecom@gmail.com
+              </p>
             </div>
 
             <div className="border-b border-border pb-6 mb-6">
