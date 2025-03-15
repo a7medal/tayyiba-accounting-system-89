@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -181,6 +180,11 @@ export function TransferStats() {
   // طباعة التقرير
   const printReport = () => {
     window.print();
+  };
+  
+  // Function to determine bar color based on value
+  const getBarColor = (entry: any) => {
+    return entry.balance >= 0 ? '#10b981' : '#ef4444';
   };
   
   return (
@@ -416,7 +420,7 @@ export function TransferStats() {
                   <Bar 
                     dataKey="balance" 
                     name="الميزان"
-                    fill={(entry) => entry.balance >= 0 ? '#10b981' : '#ef4444'}
+                    fill={getBarColor}
                   />
                 </BarChart>
               </ResponsiveContainer>

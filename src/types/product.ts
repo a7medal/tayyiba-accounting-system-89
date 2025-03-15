@@ -19,7 +19,7 @@ export interface Product {
   currency: 'MRU'; // الأوقية الموريتانية
 }
 
-export const formatCurrency = (amount: number): string => {
+export const formatCurrency = (amount: number, currency: string = 'MRU'): string => {
   // تنسيق المبلغ بالأوقية
   return `${amount.toLocaleString('ar-MR')} أوقية`;
 };

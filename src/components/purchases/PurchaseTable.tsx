@@ -67,10 +67,10 @@ export function PurchaseTable({ purchases, onEdit, onDelete, onView }: PurchaseT
               <TableCell>{purchase.supplierName}</TableCell>
               <TableCell>{format(new Date(purchase.date), 'yyyy/MM/dd')}</TableCell>
               <TableCell>
-                {formatCurrency(purchase.totalAmount, purchase.currency)}
+                {formatCurrency(purchase.totalAmount)}
               </TableCell>
               <TableCell>
-                {formatCurrency(purchase.paidAmount, purchase.currency)}
+                {formatCurrency(purchase.paidAmount)}
               </TableCell>
               <TableCell>
                 <Badge className={getPaymentStatusClass(purchase.paymentStatus)}>

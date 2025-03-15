@@ -44,7 +44,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">السعر:</span>
-            <span className="font-medium">{formatCurrency(product.price, product.currency)}</span>
+            <span className="font-medium">{formatCurrency(product.price)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">المخزون:</span>

@@ -46,8 +46,8 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
             <TableRow key={product.id}>
               <TableCell className="font-medium">{product.name}</TableCell>
               <TableCell>{product.sku}</TableCell>
-              <TableCell>{formatCurrency(product.price, product.currency)}</TableCell>
-              <TableCell>{formatCurrency(product.cost, product.currency)}</TableCell>
+              <TableCell>{formatCurrency(product.price)}</TableCell>
+              <TableCell>{formatCurrency(product.cost)}</TableCell>
               <TableCell className={product.stock <= 5 ? 'text-destructive' : ''}>
                 {product.stock} وحدة
               </TableCell>

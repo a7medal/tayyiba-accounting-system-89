@@ -110,8 +110,8 @@ export function PurchaseDetails({
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.productName}</TableCell>
                       <TableCell className="text-left">{item.quantity}</TableCell>
-                      <TableCell className="text-left">{formatCurrency(item.unitPrice, purchase.currency)}</TableCell>
-                      <TableCell className="text-left">{formatCurrency(item.totalPrice, purchase.currency)}</TableCell>
+                      <TableCell className="text-left">{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell className="text-left">{formatCurrency(item.totalPrice)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -122,16 +122,16 @@ export function PurchaseDetails({
           <div className="flex flex-col gap-2 bg-muted/20 p-4 rounded-md">
             <div className="flex items-center justify-between text-sm">
               <span>إجمالي المبلغ:</span>
-              <span className="font-bold">{formatCurrency(purchase.totalAmount, purchase.currency)}</span>
+              <span className="font-bold">{formatCurrency(purchase.totalAmount)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span>المبلغ المدفوع:</span>
-              <span className="font-bold">{formatCurrency(purchase.paidAmount, purchase.currency)}</span>
+              <span className="font-bold">{formatCurrency(purchase.paidAmount)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span>المبلغ المتبقي:</span>
               <span className="font-bold text-destructive">
-                {formatCurrency(purchase.totalAmount - purchase.paidAmount, purchase.currency)}
+                {formatCurrency(purchase.totalAmount - purchase.paidAmount)}
               </span>
             </div>
           </div>
