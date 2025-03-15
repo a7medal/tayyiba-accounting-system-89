@@ -36,14 +36,14 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="إجمالي الإيرادات"
-          value="45,200 ريال"
+          value="45,200 MRU"
           description="خلال هذا الشهر"
           icon={<DollarSign className="h-5 w-5" />}
           trend={{ value: 12.5, positive: true }}
         />
         <StatCard
           title="إجمالي المصروفات"
-          value="24,800 ريال"
+          value="24,800 MRU"
           description="خلال هذا الشهر"
           icon={<Wallet className="h-5 w-5" />}
           trend={{ value: 3.2, positive: false }}
@@ -57,7 +57,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="صافي الربح"
-          value="20,400 ريال"
+          value="20,400 MRU"
           description="خلال هذا الشهر"
           icon={<BarChart4 className="h-5 w-5" />}
           trend={{ value: 18.3, positive: true }}
@@ -84,7 +84,7 @@ export default function Dashboard() {
                 <BadgePlus className="h-4 w-4 text-green-600" />
                 <span className="text-sm">الإيرادات</span>
               </div>
-              <span className="text-sm font-medium">252,300 ريال</span>
+              <span className="text-sm font-medium">252,300 MRU</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-green-500 w-[85%]" />
