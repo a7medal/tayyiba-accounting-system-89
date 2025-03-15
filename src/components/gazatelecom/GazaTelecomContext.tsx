@@ -189,7 +189,8 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 };
 
-export { AccountType, MessageType };
+// Fixed re-export using 'export type' syntax
+export type { AccountType, MessageType };
 
 export const useGazaTelecom = () => {
   const context = useContext(GazaTelecomContext);

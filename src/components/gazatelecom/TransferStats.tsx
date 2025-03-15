@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGazaTelecom, AccountType } from './GazaTelecomContext';
+import { useGazaTelecom, type AccountType } from './GazaTelecomContext';
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, isWithinInterval } from 'date-fns';
 import { getBarColor } from './utils/ChartUtils';
 
@@ -406,10 +407,9 @@ export function TransferStats() {
                   <Bar 
                     dataKey="balance" 
                     name="الميزان"
-                    fill="#10b981"
                     isAnimationActive={true}
                   >
-                    {data.map((entry, index) => (
+                    {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getBarColor(entry.balance)} />
                     ))}
                   </Bar>
