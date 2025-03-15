@@ -139,17 +139,69 @@ html {
   .invoice-print-section, 
   .invoice-print-section *,
   .bond-print-section,
-  .bond-print-section * {
+  .bond-print-section *,
+  .print-section,
+  .print-section * {
     visibility: visible;
   }
   .invoice-print-section,
-  .bond-print-section {
+  .bond-print-section,
+  .print-section {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
+    padding: 20px;
   }
-  .no-print {
+  .no-print,
+  .print:hidden {
     display: none !important;
+  }
+  
+  /* Header for print pages */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  /* A4 and A5 print sizes */
+  .print-a4 {
+    width: 210mm;
+    height: 297mm;
+  }
+  
+  .print-a5 {
+    width: 148mm;
+    height: 210mm;
+  }
+}
+
+/* Print letterhead */
+.tayba-letterhead {
+  display: none;
+}
+
+@media print {
+  .tayba-letterhead {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #493979;
+  }
+  
+  .tayba-letterhead h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #493979;
+  }
+  
+  .tayba-letterhead p {
+    margin: 2px 0;
+    font-size: 14px;
   }
 }

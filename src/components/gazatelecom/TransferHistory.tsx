@@ -23,113 +23,161 @@ import {
   Search, 
   Filter, 
   ArrowUpDown, 
-  CheckCircle2, 
-  Clock, 
-  XCircle,
-  Eye
+  ArrowUpToLine,
+  ArrowDownToLine,
+  Download,
+  Calendar,
+  FileText,
+  FilterX,
+  Wallet,
 } from 'lucide-react';
-
-interface Transfer {
-  id: string;
-  date: string;
-  recipient: string;
-  amount: number;
-  status: 'completed' | 'pending' | 'failed';
-  transactionId: string;
-}
-
-// بيانات تجريبية
-const mockTransfers: Transfer[] = [
-  {
-    id: '1',
-    date: '2023-05-18',
-    recipient: 'محمد أحمد',
-    amount: 500,
-    status: 'completed',
-    transactionId: 'TX12345',
-  },
-  {
-    id: '2',
-    date: '2023-05-17',
-    recipient: 'علي محمود',
-    amount: 300,
-    status: 'completed',
-    transactionId: 'TX12346',
-  },
-  {
-    id: '3',
-    date: '2023-05-16',
-    recipient: 'سارة خالد',
-    amount: 750,
-    status: 'pending',
-    transactionId: 'TX12347',
-  },
-  {
-    id: '4',
-    date: '2023-05-15',
-    recipient: 'عمر حسن',
-    amount: 200,
-    status: 'failed',
-    transactionId: 'TX12348',
-  },
-  {
-    id: '5',
-    date: '2023-05-14',
-    recipient: 'فاطمة علي',
-    amount: 1000,
-    status: 'completed',
-    transactionId: 'TX12349',
-  },
-];
+import { useGazaTelecom, AccountType, MessageType } from './GazaTelecomContext';
+import { format } from 'date-fns';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import { addDays } from "date-fns";
+import { ar } from 'date-fns/locale';
 
 export function TransferHistory() {
+  const { messages } = useGazaTelecom();
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredTransfers, setFilteredTransfers] = useState<Transfer[]>(mockTransfers);
+  const [accountFilter, setAccountFilter] = useState<AccountType | 'all'>('all');
+  const [messageTypeFilter, setMessageTypeFilter] = useState<MessageType | 'all'>('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value;
-    setSearchTerm(term);
+  // استخراج الرسائل المفلترة
+  const filteredMessages = messages.filter(message => {
+    // فلترة بالبحث
+    if (
+      searchTerm && 
+      !message.serialNumber.includes(searchTerm) && 
+      !message.note?.includes(searchTerm)
+    ) {
+      return false;
+    }
     
-    const filtered = mockTransfers.filter(transfer => 
-      transfer.recipient.includes(term) || 
-      transfer.transactionId.includes(term)
-    );
+    // فلترة بنوع الحساب
+    if (accountFilter !== 'all' && message.accountType !== accountFilter) {
+      return false;
+    }
     
-    setFilteredTransfers(filtered);
+    // فلترة بنوع الرسالة
+    if (messageTypeFilter !== 'all' && message.messageType !== messageTypeFilter) {
+      return false;
+    }
+    
+    // فلترة بالتاريخ
+    if (dateRange?.from) {
+      const messageDate = new Date(message.timestamp);
+      const from = new Date(dateRange.from);
+      from.setHours(0, 0, 0, 0);
+      
+      if (dateRange.to) {
+        const to = new Date(dateRange.to);
+        to.setHours(23, 59, 59, 999);
+        return messageDate >= from && messageDate <= to;
+      } else {
+        // استخدام نفس اليوم إذا لم يتم تحديد تاريخ الانتهاء
+        const fromEnd = new Date(dateRange.from);
+        fromEnd.setHours(23, 59, 59, 999);
+        return messageDate >= from && messageDate <= fromEnd;
+      }
+    }
+    
+    return true;
+  });
+  
+  // ترتيب الرسائل بالتاريخ (الأحدث أولاً)
+  const sortedMessages = [...filteredMessages].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  
+  // استخراج إجماليات للرسائل المفلترة
+  const totals = sortedMessages.reduce((acc, message) => {
+    if (message.messageType === 'outgoing') {
+      acc.outgoingAmount += message.amount;
+      acc.outgoingInterest += message.interest;
+      acc.outgoingCount += 1;
+    } else {
+      acc.incomingAmount += message.amount;
+      acc.incomingInterest += message.interest;
+      acc.incomingCount += 1;
+    }
+    return acc;
+  }, {
+    outgoingAmount: 0,
+    outgoingInterest: 0,
+    outgoingCount: 0,
+    incomingAmount: 0,
+    incomingInterest: 0,
+    incomingCount: 0
+  });
+  
+  // إعادة تعيين الفلاتر
+  const resetFilters = () => {
+    setSearchTerm('');
+    setAccountFilter('all');
+    setMessageTypeFilter('all');
+    setDateRange(undefined);
   };
   
-  const getStatusBadge = (status: Transfer['status']) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800">
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            مكتمل
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300 dark:border-yellow-800">
-            <Clock className="h-3.5 w-3.5 mr-1" />
-            قيد الانتظار
-          </Badge>
-        );
-      case 'failed':
-        return (
-          <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-800">
-            <XCircle className="h-3.5 w-3.5 mr-1" />
-            فشل
-          </Badge>
-        );
-    }
+  // تصدير البيانات كملف CSV
+  const exportToCSV = () => {
+    if (sortedMessages.length === 0) return;
+    
+    // تجهيز بيانات CSV
+    const headers = ['التاريخ', 'الوقت', 'الحساب', 'النوع', 'الرقم التسلسلي', 'المبلغ', 'الفائدة', 'ملاحظات'];
+    
+    const csvData = sortedMessages.map(message => {
+      const date = new Date(message.timestamp);
+      return [
+        format(date, 'yyyy/MM/dd'),
+        format(date, 'HH:mm:ss'),
+        message.accountType === 'main' ? 'الحساب الرئيسي' : 'حساب برينة',
+        message.messageType === 'outgoing' ? 'صادر' : 'وارد',
+        message.serialNumber,
+        message.amount.toString(),
+        message.interest.toString(),
+        message.note || ''
+      ].join(',');
+    });
+    
+    const csv = [headers.join(','), ...csvData].join('\n');
+    
+    // إنشاء ملف للتنزيل
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `تقرير_الرسائل_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   return (
-    <Card className="border-border bg-card/90 backdrop-blur-sm shadow-md">
+    <Card>
       <CardHeader>
-        <CardTitle>سجل التحويلات</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
+          سجل الرسائل
+        </CardTitle>
         <CardDescription>
-          عرض تاريخ جميع عمليات التحويل التي قمت بها
+          عرض وتصفية سجل جميع الرسائل الصادرة والواردة
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -137,54 +185,178 @@ export function TransferHistory() {
           <div className="relative flex-1">
             <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="البحث عن تحويل..."
+              placeholder="البحث في الرسائل..."
               value={searchTerm}
-              onChange={handleSearch}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pr-9"
             />
           </div>
-          <Button variant="outline" className="flex gap-2">
-            <Filter className="h-4 w-4" />
-            تصفية
-          </Button>
-          <Button variant="outline" className="flex gap-2">
-            <ArrowUpDown className="h-4 w-4" />
-            ترتيب
-          </Button>
+          
+          <div className="flex flex-wrap gap-2">
+            <Select
+              value={accountFilter}
+              onValueChange={(value) => setAccountFilter(value as AccountType | 'all')}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="الحساب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الحسابات</SelectItem>
+                <SelectItem value="main">الحساب الرئيسي</SelectItem>
+                <SelectItem value="brina">حساب برينة</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={messageTypeFilter}
+              onValueChange={(value) => setMessageTypeFilter(value as MessageType | 'all')}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="نوع الرسالة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الأنواع</SelectItem>
+                <SelectItem value="outgoing">صادر</SelectItem>
+                <SelectItem value="incoming">وارد</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[160px] gap-2 flex justify-between items-center">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        `${format(dateRange.from, 'P')} - ${format(dateRange.to, 'P')}`
+                      ) : (
+                        format(dateRange.from, 'P')
+                      )
+                    ) : (
+                      'تاريخ البداية - النهاية'
+                    )}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <CalendarComponent
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  locale={ar}
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <Button variant="ghost" onClick={resetFilters} className="gap-1">
+              <FilterX className="h-4 w-4" />
+              إعادة تعيين
+            </Button>
+            
+            <Button variant="secondary" onClick={exportToCSV} className="gap-1">
+              <Download className="h-4 w-4" />
+              تصدير
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <CardContent className="p-4">
+              <div className="flex items-center mb-2">
+                <ArrowUpToLine className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                <h3 className="font-medium">الرسائل الصادرة</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">المبلغ</div>
+                  <div className="text-xl font-bold">{totals.outgoingAmount.toLocaleString()} أوقية</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">الفائدة</div>
+                  <div className="text-lg">{totals.outgoingInterest.toLocaleString()} أوقية</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">العدد</div>
+                  <div>{totals.outgoingCount}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+            <CardContent className="p-4">
+              <div className="flex items-center mb-2">
+                <ArrowDownToLine className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                <h3 className="font-medium">الرسائل الواردة</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">المبلغ</div>
+                  <div className="text-xl font-bold">{totals.incomingAmount.toLocaleString()} أوقية</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">الفائدة</div>
+                  <div className="text-lg">{totals.incomingInterest.toLocaleString()} أوقية</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">العدد</div>
+                  <div>{totals.incomingCount}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         <div className="rounded-md border">
           <Table>
             <TableCaption>
-              {filteredTransfers.length 
-                ? `إجمالي عدد التحويلات: ${filteredTransfers.length}` 
-                : "لا توجد تحويلات مطابقة للبحث"}
+              {sortedMessages.length 
+                ? `إجمالي عدد الرسائل المعروضة: ${sortedMessages.length}` 
+                : "لا توجد رسائل مطابقة للبحث"}
             </TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>التاريخ</TableHead>
-                <TableHead>المستلم</TableHead>
+                <TableHead>الحساب</TableHead>
+                <TableHead>النوع</TableHead>
+                <TableHead>الرقم التسلسلي</TableHead>
                 <TableHead>المبلغ</TableHead>
-                <TableHead>رقم التحويل</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead className="text-left">الإجراءات</TableHead>
+                <TableHead>الفائدة</TableHead>
+                <TableHead>ملاحظات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransfers.map((transfer) => (
-                <TableRow key={transfer.id}>
+              {sortedMessages.map((message) => (
+                <TableRow key={message.id}>
                   <TableCell className="font-medium">
-                    {new Date(transfer.date).toLocaleDateString('ar-EG')}
+                    {format(new Date(message.timestamp), 'yyyy/MM/dd HH:mm')}
                   </TableCell>
-                  <TableCell>{transfer.recipient}</TableCell>
-                  <TableCell>${transfer.amount.toFixed(2)}</TableCell>
-                  <TableCell>{transfer.transactionId}</TableCell>
-                  <TableCell>{getStatusBadge(transfer.status)}</TableCell>
-                  <TableCell className="text-left">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4 ml-1" />
-                      عرض
-                    </Button>
+                  <TableCell>
+                    {message.accountType === 'main' ? 'الحساب الرئيسي' : 'حساب برينة'}
+                  </TableCell>
+                  <TableCell>
+                    {message.messageType === 'outgoing' ? (
+                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                        <ArrowUpToLine className="h-3 w-3 mr-1" />
+                        صادر
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                        <ArrowDownToLine className="h-3 w-3 mr-1" />
+                        وارد
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>{message.serialNumber}</TableCell>
+                  <TableCell>{message.amount.toLocaleString()} أوقية</TableCell>
+                  <TableCell>{message.interest.toLocaleString()} أوقية</TableCell>
+                  <TableCell className="max-w-[150px] truncate">
+                    {message.note || '-'}
                   </TableCell>
                 </TableRow>
               ))}
