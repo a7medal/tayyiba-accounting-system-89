@@ -9,10 +9,10 @@ const data = [
 ];
 
 const invoices = [
-  { id: 1, number: 'INV-001', client: 'شركة النور', date: '15-05-2023', amount: '2,500 ريال', status: 'paid' },
-  { id: 2, number: 'INV-002', client: 'مؤسسة الفجر', date: '12-05-2023', amount: '1,800 ريال', status: 'pending' },
-  { id: 3, number: 'INV-003', client: 'شركة السلام', date: '10-05-2023', amount: '3,200 ريال', status: 'paid' },
-  { id: 4, number: 'INV-004', client: 'شركة الأمل', date: '05-05-2023', amount: '1,200 ريال', status: 'overdue' }
+  { id: 1, number: 'INV-001', client: 'شركة النور', date: '15-05-2023', amount: '2,500 MRU', status: 'paid' },
+  { id: 2, number: 'INV-002', client: 'مؤسسة الفجر', date: '12-05-2023', amount: '1,800 MRU', status: 'pending' },
+  { id: 3, number: 'INV-003', client: 'شركة السلام', date: '10-05-2023', amount: '3,200 MRU', status: 'paid' },
+  { id: 4, number: 'INV-004', client: 'شركة الأمل', date: '05-05-2023', amount: '1,200 MRU', status: 'overdue' }
 ];
 
 const chartConfig: ChartConfig = {
