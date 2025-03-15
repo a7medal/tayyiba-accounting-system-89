@@ -34,8 +34,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGazaTelecom, AccountType } from './GazaTelecomContext';
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, isWithinInterval } from 'date-fns';
+import { getBarColor } from './utils/ChartUtils';
 
-// ألوان الرسم البياني
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
 
 export function TransferStats() {
@@ -43,7 +43,6 @@ export function TransferStats() {
   const [accountType, setAccountType] = useState<AccountType | 'all'>('all');
   const { messages } = useGazaTelecom();
   
-  // تحديد نطاق التاريخ بناءً على الفترة المحددة
   const getDateRange = () => {
     const endDate = new Date();
     let startDate;
@@ -66,7 +65,6 @@ export function TransferStats() {
     };
   };
   
-  // تصفية الرسائل بناءً على نطاق التاريخ ونوع الحساب
   const getFilteredMessages = () => {
     const dateRange = getDateRange();
     
@@ -86,7 +84,6 @@ export function TransferStats() {
   
   const filteredMessages = getFilteredMessages();
   
-  // إنشاء بيانات المخطط الزمني
   const getChartData = () => {
     const dateRange = getDateRange();
     const days = eachDayOfInterval({
@@ -98,13 +95,11 @@ export function TransferStats() {
       const dayStart = startOfDay(day);
       const dayEnd = endOfDay(day);
       
-      // تصفية الرسائل لهذا اليوم
       const dayMessages = filteredMessages.filter(message => {
         const messageDate = new Date(message.timestamp);
         return isWithinInterval(messageDate, { start: dayStart, end: dayEnd });
       });
       
-      // حساب المجاميع
       const outgoing = dayMessages
         .filter(msg => msg.messageType === 'outgoing')
         .reduce((sum, msg) => sum + msg.amount, 0);
@@ -125,7 +120,6 @@ export function TransferStats() {
   
   const chartData = getChartData();
   
-  // إنشاء بيانات المخطط الدائري لنوع الرسائل
   const getPieChartData = () => {
     const outgoing = filteredMessages
       .filter(msg => msg.messageType === 'outgoing')
@@ -141,7 +135,6 @@ export function TransferStats() {
     ];
   };
   
-  // إنشاء بيانات المخطط الدائري للحسابات
   const getAccountsPieChartData = () => {
     const main = filteredMessages
       .filter(msg => msg.accountType === 'main')
@@ -157,7 +150,6 @@ export function TransferStats() {
     ];
   };
   
-  // حساب الإحصائيات الإجمالية
   const calculateStats = () => {
     const outgoing = filteredMessages
       .filter(msg => msg.messageType === 'outgoing');
@@ -177,14 +169,8 @@ export function TransferStats() {
   
   const stats = calculateStats();
   
-  // طباعة التقرير
   const printReport = () => {
     window.print();
-  };
-  
-  // Function to determine bar color based on value - returns a static string for each bar
-  const getBarColor = (value: number): string => {
-    return value >= 0 ? '#10b981' : '#ef4444';
   };
   
   return (
@@ -420,8 +406,13 @@ export function TransferStats() {
                   <Bar 
                     dataKey="balance" 
                     name="الميزان"
-                    fill={(data) => getBarColor(data.balance)}
-                  />
+                    fill="#10b981"
+                    isAnimationActive={true}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getBarColor(entry.balance)} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
