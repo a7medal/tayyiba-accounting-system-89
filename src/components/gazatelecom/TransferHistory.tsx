@@ -134,41 +134,39 @@ export function TransferHistory() {
     setDateRange(undefined);
   };
   
-  // تصدير البيانات كملف CSV
   const exportToCSV = () => {
-    if (sortedMessages.length === 0) return;
-    
-    // تجهيز بيانات CSV
-    const headers = ['التاريخ', 'الوقت', 'الحساب', 'النوع', 'الرقم التسلسلي', 'المبلغ', 'الفائدة', 'ملاحظات'];
-    
-    const csvData = sortedMessages.map(message => {
-      const date = new Date(message.timestamp);
-      return [
-        format(date, 'yyyy/MM/dd'),
-        format(date, 'HH:mm:ss'),
-        message.accountType === 'main' ? 'الحساب الرئيسي' : 'حساب برينة',
-        message.messageType === 'outgoing' ? 'صادر' : 'وارد',
-        message.serialNumber,
-        message.amount.toString(),
-        message.interest.toString(),
-        message.note || ''
-      ].join(',');
-    });
-    
-    const csv = [headers.join(','), ...csvData].join('\n');
-    
-    // إنشاء ملف للتنزيل
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `تقرير_الرسائل_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  if (sortedMessages.length === 0) return; // التحقق من وجود رسائل للتحميل
   
+  // تجهيز بيانات CSV
+  const headers = ['التاريخ', 'الوقت', 'الحساب', 'النوع', 'الرقم التسلسلي', 'المبلغ', 'الفائدة', 'ملاحظات'];
+  
+  const csvData = sortedMessages.map(message => {
+    const date = new Date(message.timestamp); // تحويل التاريخ إلى كائن تاريخ
+    return [
+      `"${format(date, 'yyyy/MM/dd')}"`, // تنسيق التاريخ مع اقتباس مزدوج
+      `"${format(date, 'HH:mm:ss')}"`, // تنسيق الوقت مع اقتباس مزدوج
+      `"${message.accountType === 'main' ? 'الحساب الرئيسي' : 'حساب برينة'}"`, // نوع الحساب مع اقتباس مزدوج
+      `"${message.messageType === 'outgoing' ? 'صادر' : 'وارد'}"`, // نوع الرسالة مع اقتباس مزدوج
+      `"${message.serialNumber}"`, // الرقم التسلسلي مع اقتباس مزدوج
+      `"${message.amount.toString()}"`, // المبلغ مع اقتباس مزدوج
+      `"${message.interest.toString()}"`, // الفائدة مع اقتباس مزدوج
+      `"${message.note || ''}"` // الملاحظات مع اقتباس مزدوج (في حالة كانت موجودة)
+    ].join(','); // دمج البيانات بفواصل
+  });
+  
+  const csv = [headers.join(','), ...csvData].join('\n'); // دمج العناوين مع البيانات
+
+  // إنشاء ملف للتنزيل
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob); // إنشاء رابط لتحميل الملف
+  const link = document.createElement('a'); // إنشاء عنصر رابط
+  link.setAttribute('href', url);
+  link.setAttribute('download', `تقرير_الرسائل_${format(new Date(), 'yyyy-MM-dd')}.csv`); // تحديد اسم الملف
+  link.style.visibility = 'hidden'; // جعل الرابط غير مرئي
+  document.body.appendChild(link);
+  link.click(); // محاكاة النقر لتحميل الملف
+  document.body.removeChild(link); // إزالة الرابط بعد التحميل
+};
   return (
     <Card>
       <CardHeader>
