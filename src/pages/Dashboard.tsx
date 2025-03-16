@@ -5,15 +5,70 @@ import { StatCard } from '@/components/ui/StatCard';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { InvoiceStatus } from '@/components/dashboard/InvoiceStatus';
 
+// استيراد بيانات المنتجات للاستخدام في لوحة التحكم
+import { mockProducts } from '@/components/products/ProductData';
+
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [revenueData, setRevenueData] = useState({
+    total: 0,
+    trend: 0,
+    expenses: 0,
+    expensesTrend: 0,
+    profit: 0,
+    profitTrend: 0,
+    invoiceCount: {
+      total: 0,
+      paid: 0,
+      pending: 0
+    }
+  });
 
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
+    // حساب البيانات الإحصائية استنادًا إلى بيانات المنتجات
+    const calculateData = () => {
+      // حساب إجمالي الإيرادات من المبيعات (عدد المنتجات × السعر)
+      const totalRevenue = mockProducts.reduce((sum, product) => {
+        return sum + (product.price * Math.floor(product.stock * 0.7)); // افتراض أن 70% من المخزون تم بيعه
+      }, 0);
+      
+      // حساب إجمالي التكاليف
+      const totalCost = mockProducts.reduce((sum, product) => {
+        return sum + (product.cost * Math.floor(product.stock * 0.7)); // نفس نسبة المبيعات
+      }, 0);
+      
+      // حساب الربح الصافي
+      const netProfit = totalRevenue - totalCost;
+      
+      // توليد اتجاهات عشوائية واقعية
+      const revenueTrend = 12.5; // نسبة نمو الإيرادات
+      const expensesTrend = -3.2; // نسبة انخفاض المصروفات
+      const profitTrend = 18.3; // نسبة نمو الأرباح
+      
+      // عدد الفواتير
+      const invoiceCount = {
+        paid: 15,
+        pending: 13,
+        total: 28
+      };
+      
+      setRevenueData({
+        total: Math.round(totalRevenue),
+        trend: revenueTrend,
+        expenses: Math.round(totalCost),
+        expensesTrend: expensesTrend,
+        profit: Math.round(netProfit),
+        profitTrend: profitTrend,
+        invoiceCount
+      });
+      
       setIsLoading(false);
+    };
+    
+    const timer = setTimeout(() => {
+      calculateData();
     }, 1000);
-
+    
     return () => clearTimeout(timer);
   }, []);
 
@@ -36,31 +91,31 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="إجمالي الإيرادات"
-          value="45,200 MRU"
+          value={`${revenueData.total.toLocaleString()} MRU`}
           description="خلال هذا الشهر"
           icon={<DollarSign className="h-5 w-5" />}
-          trend={{ value: 12.5, positive: true }}
+          trend={{ value: revenueData.trend, positive: true }}
         />
         <StatCard
           title="إجمالي المصروفات"
-          value="24,800 MRU"
+          value={`${revenueData.expenses.toLocaleString()} MRU`}
           description="خلال هذا الشهر"
           icon={<Wallet className="h-5 w-5" />}
-          trend={{ value: 3.2, positive: false }}
+          trend={{ value: Math.abs(revenueData.expensesTrend), positive: revenueData.expensesTrend > 0 ? false : true }}
         />
         <StatCard
           title="الفواتير"
-          value="28"
-          description="15 مدفوعة، 13 معلقة"
+          value={revenueData.invoiceCount.total.toString()}
+          description={`${revenueData.invoiceCount.paid} مدفوعة، ${revenueData.invoiceCount.pending} معلقة`}
           icon={<CreditCard className="h-5 w-5" />}
           trend={{ value: 8.1, positive: true }}
         />
         <StatCard
           title="صافي الربح"
-          value="20,400 MRU"
+          value={`${revenueData.profit.toLocaleString()} MRU`}
           description="خلال هذا الشهر"
           icon={<BarChart4 className="h-5 w-5" />}
-          trend={{ value: 18.3, positive: true }}
+          trend={{ value: revenueData.profitTrend, positive: true }}
         />
       </div>
 
