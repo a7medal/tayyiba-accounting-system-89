@@ -88,3 +88,53 @@ export const toYYYYMMDD = (date: Date | string): string => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+// الحصول على نطاق تاريخ SQLite للاستعلامات
+export const getSQLiteDateRange = (date: string): { start: string; end: string } => {
+  const startDate = `${date} 00:00:00`;
+  const endDate = `${date} 23:59:59`;
+  return { start: startDate, end: endDate };
+};
+
+// تحويل تاريخ JavaScript إلى تنسيق SQLite
+export const toSQLiteTimestamp = (date: Date): string => {
+  return date.toISOString().replace('T', ' ').split('.')[0];
+};
+
+// استخراج التاريخ فقط من الطابع الزمني
+export const extractDateFromTimestamp = (timestamp: string): string => {
+  return timestamp.split('T')[0];
+};
+
+// تحويل تاريخ عربي إلى تاريخ JavaScript
+export const parseArabicDate = (arabicDate: string): Date => {
+  // مثال: تحويل "١٥/٠٤/٢٠٢٣" إلى تاريخ جافاسكريبت
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  
+  let latinDate = arabicDate;
+  arabicDigits.forEach((digit, index) => {
+    latinDate = latinDate.replace(new RegExp(digit, 'g'), index.toString());
+  });
+  
+  const parts = latinDate.split('/');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    return new Date(year, month, day);
+  }
+  
+  return new Date();
+};
+
+// تنسيق التاريخ باللغة العربية
+export const formatArabicDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const options: Intl.DateTimeFormatOptions = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  return d.toLocaleDateString('ar-EG', options);
+};
