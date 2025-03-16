@@ -1,228 +1,285 @@
 
 import React, { useState } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  MessageSquareText, 
+  ArrowUp, 
+  ArrowDown, 
+  Hash, 
+  DollarSign,
+  Percent,
+  Send
+} from "lucide-react";
+import { useGazaTelecom, AccountType } from './GazaTelecomContext';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { SendHorizonal, ArrowLeftRight, MessageCircle } from 'lucide-react';
-import { useGazaTelecom, AccountType, MessageType } from './GazaTelecomContext';
-import { useToast } from '@/components/ui/use-toast';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
-// تعريف نموذج التحقق من الصحة
-const formSchema = z.object({
-  serialNumber: z.string().min(1, { message: "الرقم التسلسلي مطلوب" }),
-  amount: z.coerce.number().min(1, { message: "المبلغ يجب أن يكون أكبر من صفر" }),
-  interest: z.coerce.number().min(0, { message: "الفائدة يجب أن تكون صفر أو أكبر" }),
-  accountType: z.enum(['main', 'brina'], { required_error: "نوع الحساب مطلوب" }),
-  messageType: z.enum(['incoming', 'outgoing'], { required_error: "نوع الرسالة مطلوب" }),
+// Schema for message form validation
+const messageFormSchema = z.object({
+  accountType: z.enum(['main', 'brina']),
+  messageType: z.enum(['outgoing', 'incoming']),
+  serialNumber: z.string().min(1, { message: "الرجاء إدخال الرقم التسلسلي" }),
+  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "الرجاء إدخال مبلغ صحيح أكبر من صفر",
+  }),
+  interest: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: "الرجاء إدخال فائدة صحيحة",
+  }),
   note: z.string().optional(),
 });
 
-// استخراج النوع من نموذج التحقق من الصحة
-type FormValues = z.infer<typeof formSchema>;
+type MessageFormValues = z.infer<typeof messageFormSchema>;
 
 export function MessageForm() {
-  const { addMessage } = useGazaTelecom();
   const { toast } = useToast();
+  const { addMessage } = useGazaTelecom();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // إعداد نموذج React Hook Form مع التحقق من الصحة
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<MessageFormValues>({
+    resolver: zodResolver(messageFormSchema),
     defaultValues: {
-      serialNumber: '',
-      amount: undefined,
-      interest: 0,
       accountType: 'main',
-      messageType: 'incoming',
+      messageType: 'outgoing',
+      serialNumber: '',
+      amount: '',
+      interest: '',
       note: '',
-    }
+    },
   });
 
-  // مراقبة قيم الحقول
-  const watchAccountType = watch('accountType');
-  const watchMessageType = watch('messageType');
-
-  // معالجة تقديم النموذج
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: MessageFormValues) => {
     setIsSubmitting(true);
-
+    
     try {
-      // إضافة الرسالة إلى النظام
+      // Add the message
       addMessage({
-        amount: data.amount,
-        accountType: data.accountType,
-        messageType: data.messageType,
+        accountType: data.accountType as AccountType,
+        messageType: data.messageType as 'outgoing' | 'incoming',
         serialNumber: data.serialNumber,
-        interest: data.interest,
+        amount: Number(data.amount),
+        interest: Number(data.interest),
         note: data.note,
       });
-
-      // عرض رسالة نجاح
+      
+      // Show success message
       toast({
-        title: "تمت العملية بنجاح",
-        description: "تم إضافة الرسالة بنجاح إلى النظام",
+        title: "تم إضافة الرسالة بنجاح",
+        description: `تم إضافة رسالة ${data.messageType === 'outgoing' ? 'صادرة' : 'واردة'} إلى ${data.accountType === 'main' ? 'الحساب الرئيسي' : 'حساب برينة'}`,
       });
-
-      // إعادة تعيين النموذج
-      reset();
+      
+      // Reset the form
+      form.reset({
+        accountType: data.accountType,
+        messageType: data.messageType,
+        serialNumber: '',
+        amount: '',
+        interest: '',
+        note: '',
+      });
     } catch (error) {
-      // عرض رسالة خطأ
       toast({
         title: "حدث خطأ",
-        description: "فشل في إضافة الرسالة، يرجى المحاولة مرة أخرى",
+        description: "لم نتمكن من إضافة الرسالة، يرجى المحاولة مرة أخرى",
         variant: "destructive",
       });
-      console.error("Error adding message:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <Card>
+    <Card className="border-border bg-card/90 backdrop-blur-sm shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-primary" />
+          <MessageSquareText className="h-5 w-5 text-primary" />
           إضافة رسالة جديدة
         </CardTitle>
         <CardDescription>
-          أدخل تفاصيل الرسالة الجديدة
+          قم بإدخال بيانات الرسالة الجديدة
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="messageForm" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Tabs 
+              defaultValue="main"
+              onValueChange={(value) => form.setValue('accountType', value as AccountType)}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="main">الحساب الرئيسي</TabsTrigger>
+                <TabsTrigger value="brina">حساب برينة</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="serialNumber">الرقم التسلسلي</Label>
-                <Input
-                  id="serialNumber"
-                  placeholder="أدخل الرقم التسلسلي للرسالة"
-                  {...register('serialNumber')}
-                />
-                {errors.serialNumber && (
-                  <p className="text-sm text-red-500 mt-1">{errors.serialNumber.message}</p>
+              <FormField
+                control={form.control}
+                name="messageType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>نوع الرسالة</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر نوع الرسالة" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="outgoing" className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <ArrowUp className="h-4 w-4 text-green-600" />
+                            <span>صادر</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="incoming" className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <ArrowDown className="h-4 w-4 text-red-600" />
+                            <span>وارد</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-
-              <div>
-                <Label htmlFor="amount">المبلغ</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="أدخل المبلغ"
-                  {...register('amount')}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="serialNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الرقم التسلسلي</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Hash className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="أدخل الرقم التسلسلي"
+                            className="pr-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.amount && (
-                  <p className="text-sm text-red-500 mt-1">{errors.amount.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="interest">الفائدة</Label>
-                <Input
-                  id="interest"
-                  type="number"
-                  placeholder="أدخل الفائدة"
-                  {...register('interest')}
+                
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>المبلغ</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <DollarSign className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="أدخل المبلغ"
+                            className="pr-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.interest && (
-                  <p className="text-sm text-red-500 mt-1">{errors.interest.message}</p>
-                )}
+                
+                <FormField
+                  control={form.control}
+                  name="interest"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الفائدة</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Percent className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="أدخل الفائدة"
+                            className="pr-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
+              
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ملاحظات</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="أي ملاحظات إضافية (اختياري)"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label>نوع الحساب</Label>
-                <RadioGroup
-                  defaultValue="main"
-                  value={watchAccountType}
-                  onValueChange={(value) => setValue('accountType', value as AccountType)}
-                  className="flex flex-col space-y-1 mt-2"
-                >
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="main" id="accountTypeMain" />
-                    <Label htmlFor="accountTypeMain" className="font-normal">الحساب الرئيسي</Label>
-                  </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="brina" id="accountTypeBrina" />
-                    <Label htmlFor="accountTypeBrina" className="font-normal">حساب برينة</Label>
-                  </div>
-                </RadioGroup>
-                {errors.accountType && (
-                  <p className="text-sm text-red-500 mt-1">{errors.accountType.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label>نوع الرسالة</Label>
-                <RadioGroup
-                  defaultValue="incoming"
-                  value={watchMessageType}
-                  onValueChange={(value) => setValue('messageType', value as MessageType)}
-                  className="flex flex-col space-y-1 mt-2"
-                >
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="incoming" id="messageTypeIncoming" />
-                    <Label htmlFor="messageTypeIncoming" className="font-normal">وارد</Label>
-                  </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <RadioGroupItem value="outgoing" id="messageTypeOutgoing" />
-                    <Label htmlFor="messageTypeOutgoing" className="font-normal">صادر</Label>
-                  </div>
-                </RadioGroup>
-                {errors.messageType && (
-                  <p className="text-sm text-red-500 mt-1">{errors.messageType.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="note">ملاحظات</Label>
-                <Textarea
-                  id="note"
-                  placeholder="أدخل أي ملاحظات إضافية (اختياري)"
-                  className="h-[104px]"
-                  {...register('note')}
-                />
-              </div>
-            </div>
-          </div>
-        </form>
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "جاري الإضافة..." : "إضافة الرسالة"}
+              <Send className="mr-2 h-4 w-4" />
+            </Button>
+          </form>
+        </Form>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => reset()}
-        >
-          إعادة تعيين
-        </Button>
-        <Button
-          type="submit"
-          form="messageForm"
-          disabled={isSubmitting}
-          className="gap-2"
-        >
-          {watchMessageType === 'incoming' ? (
-            <>
-              <ArrowLeftRight className="h-4 w-4" />
-              استلام رسالة
-            </>
-          ) : (
-            <>
-              <SendHorizonal className="h-4 w-4" />
-              إرسال رسالة
-            </>
-          )}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

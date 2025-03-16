@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -180,7 +179,7 @@ html {
     width: 148mm;
     height: 210mm;
     margin: 0 auto;
-    padding: 10mm;
+    padding: 5mm;
     page-break-after: always;
   }
 }
@@ -261,5 +260,66 @@ html {
   
   .print-a5 .tayba-letterhead .logo {
     max-width: 100px;
+  }
+  
+  .print-a5 table {
+    font-size: 9px;
+  }
+  
+  .print-a5 th,
+  .print-a5 td {
+    padding: 4px;
+  }
+}
+
+/* تحسينات للطباعة على A4 */
+@media print and (min-width: 210mm) {
+  .print-a4 {
+    font-size: 100%;
+  }
+  
+  .print-a4 .tayba-letterhead h1 {
+    font-size: 24px;
+  }
+  
+  .print-a4 .tayba-letterhead p {
+    font-size: 14px;
+  }
+  
+  .print-a4 .tayba-letterhead .logo {
+    max-width: 150px;
+  }
+  
+  .print-a4 table {
+    font-size: 12px;
+  }
+  
+  .print-a4 th,
+  .print-a4 td {
+    padding: 8px;
+  }
+}
+
+/* A5 Landscape */
+.print-a5-landscape {
+  width: 210mm;
+  height: 148mm;
+  margin: 0 auto;
+  padding: 5mm;
+  page-break-after: always;
+}
+
+@media print and (width: 210mm) and (height: 148mm) {
+  .print-a5-landscape {
+    font-size: 90%;
+  }
+  
+  .print-a5-landscape table {
+    font-size: 10px;
+  }
+  
+  .print-a5-landscape th,
+  .print-a5-landscape td {
+    padding: 4px;
   }
 }

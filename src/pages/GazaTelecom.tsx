@@ -8,13 +8,13 @@ import { TransferStats } from '@/components/gazatelecom/TransferStats';
 import { MessageForm } from '@/components/gazatelecom/MessageForm';
 import { AccountDashboard } from '@/components/gazatelecom/AccountDashboard';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, Database, Printer, FileText } from 'lucide-react';
+import { InfoIcon, Database, Printer, FileText, Calendar } from 'lucide-react';
 import { GazaTelecomProvider } from '@/components/gazatelecom/GazaTelecomContext';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/components/ui/use-toast';
 import { DatabaseService } from '@/components/gazatelecom/services/DatabaseService';
-import { Letterhead } from '@/components/ui/letterhead';
+import { Letterhead, PrintHeader } from '@/components/ui/letterhead';
 
 const GazaTelecom = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -100,7 +100,7 @@ const GazaTelecom = () => {
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline"
               className="gap-2" 
@@ -174,8 +174,7 @@ const GazaTelecom = () => {
         
         {/* قسم للطباعة - سيكون مرئيًا فقط عند الطباعة */}
         <div className="print-section print-a4 hidden">
-          <Letterhead />
-          <h2 className="text-xl font-bold mt-4 mb-6 text-center">تقرير العمليات المالية - غزة تيليكوم</h2>
+          <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" />
           
           <div className="mb-8">
             <h3 className="text-lg font-bold mb-2">ملخص الحساب الرئيسي</h3>
@@ -250,6 +249,64 @@ const GazaTelecom = () => {
               <div className="text-sm text-left">
                 <p>توقيع المسؤول: ________________</p>
                 <p>الختم الرسمي</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* نموذج الطباعة A5 */}
+        <div className="print-section print-a5 hidden">
+          <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" size="a5" />
+          
+          <div className="mb-4">
+            <h3 className="text-base font-bold mb-1">ملخص الحساب الرئيسي</h3>
+            <table className="w-full border-collapse mb-3 text-sm">
+              <thead>
+                <tr>
+                  <th className="border p-1 text-right">الوارد</th>
+                  <th className="border p-1 text-right">الصادر</th>
+                  <th className="border p-1 text-right">النهائي 1</th>
+                  <th className="border p-1 text-right">النهائي 2</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border p-1 text-right" id="print-a5-main-incoming">-</td>
+                  <td className="border p-1 text-right" id="print-a5-main-outgoing">-</td>
+                  <td className="border p-1 text-right" id="print-a5-main-final1">-</td>
+                  <td className="border p-1 text-right" id="print-a5-main-final2">-</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <h3 className="text-base font-bold mb-1">ملخص حساب برينة</h3>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="border p-1 text-right">الوارد</th>
+                  <th className="border p-1 text-right">الصادر</th>
+                  <th className="border p-1 text-right">الرصيد</th>
+                  <th className="border p-1 text-right">الفرق</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border p-1 text-right" id="print-a5-brina-incoming">-</td>
+                  <td className="border p-1 text-right" id="print-a5-brina-outgoing">-</td>
+                  <td className="border p-1 text-right" id="print-a5-brina-balance">-</td>
+                  <td className="border p-1 text-right" id="print-a5-brina-diff">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t text-xs">
+            <div className="flex justify-between">
+              <div>
+                <p>تاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
+              </div>
+              <div>
+                <p>توقيع المسؤول: _______</p>
               </div>
             </div>
           </div>

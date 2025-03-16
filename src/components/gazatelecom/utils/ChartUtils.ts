@@ -1,19 +1,37 @@
 
 /**
- * وظائف مساعدة للرسوم البيانية والتقارير
+ * وظائف مساعدة للرسوم البيانية
  */
 
-// إنشاء لون الأعمدة ديناميكيًا بناءً على قيمة البيانات
+// تحديد لون الشريط بناءً على القيمة
 export const getBarColor = (value: number): string => {
-  return value < 0 ? "#ef4444" : "#10b981";
+  if (value > 0) {
+    return '#22c55e'; // أخضر للقيم الموجبة
+  } else if (value < 0) {
+    return '#ef4444'; // أحمر للقيم السالبة
+  } else {
+    return '#9ca3af'; // رمادي للقيمة صفر
+  }
 };
 
-// تنسيق المبالغ المالية
-export const formatMoney = (value: number): string => {
-  return `${value.toLocaleString()} MRU`;
+// تنسيق رقم مع العملة
+export const formatCurrency = (amount: number, currency: string = 'أوقية'): string => {
+  return `${amount.toLocaleString()} ${currency}`;
 };
 
-// تنسيق النسب المئوية
-export const formatPercentage = (value: number): string => {
-  return `${value.toFixed(1)}%`;
+// تحديد مجموعة ألوان للرسوم البيانية
+export const CHART_COLORS = [
+  '#3b82f6', // أزرق
+  '#ef4444', // أحمر
+  '#10b981', // أخضر
+  '#f59e0b', // برتقالي
+  '#8b5cf6', // أرجواني
+  '#ec4899', // وردي
+  '#06b6d4', // سماوي
+];
+
+// حساب النسبة المئوية
+export const calculatePercentage = (value: number, total: number): number => {
+  if (total === 0) return 0;
+  return Math.round((value / total) * 100);
 };
