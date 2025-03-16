@@ -315,7 +315,7 @@ const GazaTelecom = () => {
         
         {/* نموذج الطباعة A5 */}
         <div className="print-section print-a5 hidden">
-          <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" size="A5" />
+          <PrintHeader title="تقرير العمليات المالية - غزة تلكوم" size="A5" />
           
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-base font-bold">تقرير يوم: <span className="print-report-date"></span></h2>
