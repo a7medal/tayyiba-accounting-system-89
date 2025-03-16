@@ -6,7 +6,7 @@
 // تحديد لون الشريط بناءً على القيمة
 export const getBarColor = (value: number): string => {
   if (value > 0) {
-    return '#22c55e'; // أخضر للقيم الموجبة
+    return '#ef4444'; // أخضر للقيم الموجبة
   } else if (value < 0) {
     return '#ef4444'; // أحمر للقيم السالبة
   } else {
