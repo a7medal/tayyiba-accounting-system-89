@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -8,7 +7,7 @@ import { TransferStats } from '@/components/gazatelecom/TransferStats';
 import { MessageForm } from '@/components/gazatelecom/MessageForm';
 import { AccountDashboard } from '@/components/gazatelecom/AccountDashboard';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, Database, Printer, FileText, Calendar } from 'lucide-react';
+import { InfoIcon, Printer, FileText, Calendar, Settings } from 'lucide-react';
 import { GazaTelecomProvider, useGazaTelecom } from '@/components/gazatelecom/GazaTelecomContext';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
@@ -16,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { DatabaseService } from '@/components/gazatelecom/services/DatabaseService';
 import { Letterhead, PrintHeader } from '@/components/ui/letterhead';
 import { formatDate } from '@/components/gazatelecom/utils/ChartUtils';
+import { DatabaseSettings } from '@/components/gazatelecom/DatabaseSettings';
 
 const PrintContent = () => {
   const { 
@@ -126,66 +126,9 @@ const PrintContent = () => {
 
 const GazaTelecom = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
 
-  // التحقق من اتصال قاعدة البيانات
-  useEffect(() => {
-    const checkConnection = () => {
-      const connectionState = DatabaseService.isConnected();
-      setIsConnected(connectionState);
-    };
-    
-    checkConnection();
-    
-    // إعادة التحقق من حالة الاتصال كل 30 ثانية
-    const interval = setInterval(checkConnection, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  const handleConnectDatabase = async () => {
-    // محاولة الاتصال بقاعدة البيانات
-    setIsConnecting(true);
-    
-    try {
-      const success = await DatabaseService.connect();
-      setIsConnected(success);
-      
-      if (success) {
-        toast({
-          title: "تم الاتصال بقاعدة البيانات",
-          description: "تم إنشاء اتصال مع قاعدة البيانات بنجاح",
-        });
-      } else {
-        toast({
-          title: "فشل الاتصال",
-          description: "تعذر الاتصال بقاعدة البيانات، يرجى المحاولة مرة أخرى",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error connecting to database:", error);
-      toast({
-        title: "خطأ في الاتصال",
-        description: "حدث خطأ أثناء محاولة الاتصال بقاعدة البيانات",
-        variant: "destructive",
-      });
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-  
-  const handleDisconnectDatabase = () => {
-    DatabaseService.disconnect();
-    setIsConnected(false);
-    toast({
-      title: "تم قطع الاتصال",
-      description: "تم قطع الاتصال بقاعدة البيانات بنجاح",
-    });
-  };
-  
   const handlePrint = () => {
     window.print();
   };
@@ -218,67 +161,63 @@ const GazaTelecom = () => {
               طباعة التقرير
             </Button>
             
-            {isConnected ? (
-              <Button 
-                variant="secondary"
-                className="gap-2" 
-                onClick={handleDisconnectDatabase}
-              >
-                <Database className="h-4 w-4" />
-                قطع الاتصال بقاعدة البيانات
-              </Button>
-            ) : (
-              <Button 
-                variant="default"
-                className="gap-2" 
-                onClick={handleConnectDatabase}
-                disabled={isConnecting}
-              >
-                <Database className="h-4 w-4" />
-                {isConnecting ? "جاري الاتصال..." : "الاتصال بقاعدة البيانات"}
-              </Button>
-            )}
+            <Button 
+              variant={showSettings ? "default" : "outline"}
+              className="gap-2" 
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              <Settings className="h-4 w-4" />
+              الإعدادات
+            </Button>
           </div>
         </div>
         <Separator />
         
-        <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-          <InfoIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          <AlertTitle className="text-blue-800 dark:text-blue-300">طيبة المدينة تلكوم</AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-400">
-            رقم الهاتف: 22371138 / 41101138 | البريد الإلكتروني: taybaelmedintelecom@gmail.com
-          </AlertDescription>
-        </Alert>
-        
-        <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-5 gap-1">
-            <TabsTrigger value="dashboard">لوحة المعلومات</TabsTrigger>
-            <TabsTrigger value="message">إدخال رسالة</TabsTrigger>
-            <TabsTrigger value="history">سجل الرسائل</TabsTrigger>
-            <TabsTrigger value="transfers">التحويلات</TabsTrigger>
-            <TabsTrigger value="stats">التقارير</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="dashboard" className="mt-6">
-            <AccountDashboard />
-          </TabsContent>
-          
-          <TabsContent value="message" className="mt-6">
-            <MessageForm />
-          </TabsContent>
-          
-          <TabsContent value="history" className="mt-6">
-            <TransferHistory />
-          </TabsContent>
-          
-          <TabsContent value="transfers" className="mt-6">
-            <TransferForm />
-          </TabsContent>
-          
-          <TabsContent value="stats" className="mt-6">
-            <TransferStats />
-          </TabsContent>
-        </Tabs>
+        {showSettings ? (
+          <div className="my-6">
+            <DatabaseSettings />
+          </div>
+        ) : (
+          <>
+            <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <InfoIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <AlertTitle className="text-blue-800 dark:text-blue-300">طيبة المدينة تلكوم</AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-400">
+                رقم الهاتف: 22371138 / 41101138 | البريد الإلكتروني: taybaelmedintelecom@gmail.com
+              </AlertDescription>
+            </Alert>
+            
+            <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-5 gap-1">
+                <TabsTrigger value="dashboard">لوحة المعلومات</TabsTrigger>
+                <TabsTrigger value="message">إدخال رسالة</TabsTrigger>
+                <TabsTrigger value="history">سجل الرسائل</TabsTrigger>
+                <TabsTrigger value="transfers">التحويلات</TabsTrigger>
+                <TabsTrigger value="stats">التقارير</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="dashboard" className="mt-6">
+                <AccountDashboard />
+              </TabsContent>
+              
+              <TabsContent value="message" className="mt-6">
+                <MessageForm />
+              </TabsContent>
+              
+              <TabsContent value="history" className="mt-6">
+                <TransferHistory />
+              </TabsContent>
+              
+              <TabsContent value="transfers" className="mt-6">
+                <TransferForm />
+              </TabsContent>
+              
+              <TabsContent value="stats" className="mt-6">
+                <TransferStats />
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
         
         {/* PrintContent لملء عناصر الطباعة */}
         <PrintContent />

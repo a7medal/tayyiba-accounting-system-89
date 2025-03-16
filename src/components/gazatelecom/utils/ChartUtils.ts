@@ -64,3 +64,27 @@ export const isSameDay = (date1: string | Date, date2: string | Date): boolean =
     d1.getDate() === d2.getDate()
   );
 };
+
+// تنسيق تاريخ لاستخدامه في SQLite
+export const formatSQLiteDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toISOString().split('T')[0];
+};
+
+// تحويل تاريخ SQLite إلى كائن Date
+export const parseSQLiteDate = (dateString: string): Date => {
+  // إذا كان التاريخ بصيغة YYYY-MM-DD فقط، أضف وقتًا إليه
+  if (dateString.length === 10) {
+    return new Date(`${dateString}T00:00:00.000Z`);
+  }
+  return new Date(dateString);
+};
+
+// تحويل تاريخ بأي تنسيق إلى تنسيق YYYY-MM-DD
+export const toYYYYMMDD = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};

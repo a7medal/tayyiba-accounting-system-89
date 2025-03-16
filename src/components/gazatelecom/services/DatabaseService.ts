@@ -1,5 +1,6 @@
 
 import { LocalStorageService } from './LocalStorageService';
+import { SQLiteService } from './SQLiteService';
 import { Message, DailyBalance } from '../models/MessageModel';
 
 // واجهة خدمة قاعدة البيانات
@@ -13,6 +14,69 @@ export interface DatabaseServiceInterface {
   updateMessage(message: Message): Promise<Message>;
   getDailyBalances(): Promise<DailyBalance[]>;
   saveDailyBalance(balance: DailyBalance): Promise<DailyBalance>;
+}
+
+// تنفيذ خدمة قاعدة البيانات باستخدام SQLite
+class SQLiteDatabaseService implements DatabaseServiceInterface {
+  private connected: boolean = false;
+
+  async connect(): Promise<boolean> {
+    console.log('محاولة الاتصال بقاعدة بيانات SQLite...');
+    try {
+      // محاولة الحصول على جميع الرسائل للتأكد من سلامة الاتصال
+      await SQLiteService.getMessages();
+      this.connected = true;
+      localStorage.setItem('dbConnectionState', 'connected');
+      console.log('تم الاتصال بقاعدة بيانات SQLite بنجاح');
+      return true;
+    } catch (error) {
+      console.error('فشل الاتصال بقاعدة بيانات SQLite:', error);
+      this.connected = false;
+      localStorage.setItem('dbConnectionState', 'disconnected');
+      return false;
+    }
+  }
+
+  disconnect(): void {
+    console.log('قطع الاتصال بقاعدة بيانات SQLite...');
+    this.connected = false;
+    localStorage.setItem('dbConnectionState', 'disconnected');
+    console.log('تم قطع الاتصال بقاعدة بيانات SQLite');
+  }
+
+  isConnected(): boolean {
+    return this.connected || localStorage.getItem('dbConnectionState') === 'connected';
+  }
+
+  async getMessages(): Promise<Message[]> {
+    console.log('استرجاع الرسائل من قاعدة بيانات SQLite...');
+    return SQLiteService.getMessages();
+  }
+
+  async saveMessage(message: Message): Promise<Message> {
+    console.log('حفظ رسالة في قاعدة بيانات SQLite...', message);
+    return SQLiteService.saveMessage(message);
+  }
+
+  async deleteMessage(messageId: string): Promise<boolean> {
+    console.log('حذف رسالة من قاعدة بيانات SQLite...', messageId);
+    return SQLiteService.deleteMessage(messageId);
+  }
+
+  async updateMessage(message: Message): Promise<Message> {
+    console.log('تحديث رسالة في قاعدة بيانات SQLite...', message);
+    return SQLiteService.updateMessage(message);
+  }
+
+  async getDailyBalances(): Promise<DailyBalance[]> {
+    console.log('استرجاع الأرصدة اليومية من قاعدة بيانات SQLite...');
+    return SQLiteService.getDailyBalances();
+  }
+
+  async saveDailyBalance(balance: DailyBalance): Promise<DailyBalance> {
+    console.log('حفظ رصيد يومي في قاعدة بيانات SQLite...', balance);
+    return SQLiteService.saveDailyBalance(balance);
+  }
 }
 
 // تنفيذ خدمة قاعدة البيانات باستخدام التخزين المحلي (وهمية)
@@ -188,11 +252,14 @@ class RemoteDatabaseService implements DatabaseServiceInterface {
 // استخدم البيئة لاختيار نوع الخدمة المناسب
 function createDatabaseService(): DatabaseServiceInterface {
   // يمكن استخدام متغيرات البيئة أو الإعدادات لتحديد نوع الخدمة الذي سيتم استخدامه
-  const useRemoteDB = localStorage.getItem('useRemoteDB') === 'true';
+  const dbType = localStorage.getItem('dbType') || 'sqlite';
   
-  if (useRemoteDB) {
+  if (dbType === 'remote') {
     console.log('استخدام خدمة قاعدة البيانات البعيدة');
     return new RemoteDatabaseService();
+  } else if (dbType === 'sqlite') {
+    console.log('استخدام خدمة قاعدة بيانات SQLite');
+    return new SQLiteDatabaseService();
   } else {
     console.log('استخدام خدمة قاعدة البيانات المحلية');
     return new LocalDatabaseService();
