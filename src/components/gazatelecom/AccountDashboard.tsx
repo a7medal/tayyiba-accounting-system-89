@@ -44,6 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { MessageDialog } from './MessageDialog';
 import { Message, AccountType } from './models/MessageModel';
+import { isSameDay, formatDate, getPreviousDay } from './utils/ChartUtils';
 
 export function AccountDashboard() {
   const { toast } = useToast();
@@ -53,25 +54,32 @@ export function AccountDashboard() {
     getBrinaAccountSummary, 
     calculateMainAccountFinals,
     calculateBrinaAccountFinals,
-    dailyBalance,
-    setDailyBalance,
-    previousDayBalance,
+    dailyBalanceHistory,
     getMessagesByDate,
     selectedDate,
     setSelectedDate,
     addMessage,
     updateMessage,
-    deleteMessage
+    deleteMessage,
+    getBalanceForDate,
+    addDailyBalanceRecord
   } = useGazaTelecom();
   
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'custom'>('today');
   const [displayDate, setDisplayDate] = useState(new Date());
-  const [dailyBalanceInput, setDailyBalanceInput] = useState(dailyBalance.toString());
   const [selectedAccount, setSelectedAccount] = useState<AccountType>('main');
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   
-  // Update selected date based on the date filter
+  // الحصول على الرصيد الحالي للتاريخ المحدد
+  const currentBalance = getBalanceForDate(selectedDate);
+  const [dailyBalanceInput, setDailyBalanceInput] = useState(currentBalance.toString());
+
+  // الحصول على رصيد اليوم السابق للتاريخ المحدد
+  const previousDate = getPreviousDay(selectedDate);
+  const previousDayBalance = getBalanceForDate(previousDate);
+  
+  // تحديث التاريخ المحدد بناءً على عامل التصفية
   useEffect(() => {
     let date = new Date();
     
@@ -86,12 +94,13 @@ export function AccountDashboard() {
     setSelectedDate(date.toISOString().split('T')[0]);
   }, [dateFilter, setSelectedDate]);
   
-  // Update the daily balance input when the dailyBalance changes
+  // تحديث مدخل الرصيد اليومي عندما يتغير التاريخ المحدد
   useEffect(() => {
-    setDailyBalanceInput(dailyBalance.toString());
-  }, [dailyBalance]);
+    const balance = getBalanceForDate(selectedDate);
+    setDailyBalanceInput(balance.toString());
+  }, [selectedDate, getBalanceForDate]);
   
-  // Navigate to previous day
+  // الانتقال إلى اليوم السابق
   const goToPreviousDay = () => {
     const prevDay = new Date(displayDate);
     prevDay.setDate(prevDay.getDate() - 1);
@@ -100,7 +109,7 @@ export function AccountDashboard() {
     setDateFilter('custom');
   };
   
-  // Navigate to next day
+  // الانتقال إلى اليوم التالي
   const goToNextDay = () => {
     const nextDay = new Date(displayDate);
     nextDay.setDate(nextDay.getDate() + 1);
@@ -109,7 +118,7 @@ export function AccountDashboard() {
     setDateFilter('custom');
   };
   
-  // Save the daily balance
+  // حفظ الرصيد اليومي
   const saveDailyBalance = () => {
     const balance = Number(dailyBalanceInput);
     if (isNaN(balance)) {
@@ -121,25 +130,29 @@ export function AccountDashboard() {
       return;
     }
     
-    setDailyBalance(balance);
+    addDailyBalanceRecord({
+      amount: balance,
+      date: selectedDate
+    });
+    
     toast({
       title: "تم الحفظ",
-      description: "تم حفظ الرصيد اليومي بنجاح",
+      description: `تم حفظ الرصيد اليومي لتاريخ ${formatDate(selectedDate)} بنجاح`,
     });
   };
   
-  // Get filtered messages for the current date and account
+  // الحصول على الرسائل المصفاة للتاريخ والحساب الحاليين
   const filteredMessages = getMessagesByDate(selectedDate, selectedAccount);
   
-  // Calculate account summaries based on the selected date
+  // حساب ملخصات الحساب بناءً على التاريخ المحدد
   const mainSummary = getMainAccountSummary(selectedDate);
   const brinaSummary = getBrinaAccountSummary(selectedDate);
   
-  // Calculate finals based on the selected date
+  // حساب النهائيات بناءً على التاريخ المحدد
   const mainFinals = calculateMainAccountFinals(selectedDate);
   const brinaFinals = calculateBrinaAccountFinals(selectedDate);
   
-  // Handle message deletion
+  // التعامل مع حذف الرسالة
   const handleDeleteMessage = (messageId: string) => {
     if (window.confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
       deleteMessage(messageId);
@@ -150,22 +163,22 @@ export function AccountDashboard() {
     }
   };
   
-  // Handle edit message click
+  // التعامل مع تعديل الرسالة
   const handleEditMessage = (message: Message) => {
     setEditingMessage(message);
     setIsMessageDialogOpen(true);
   };
   
-  // Handle add new message click
+  // التعامل مع إضافة رسالة جديدة
   const handleAddMessage = () => {
     setEditingMessage(null);
     setIsMessageDialogOpen(true);
   };
   
-  // Handle message save from dialog
+  // التعامل مع حفظ الرسالة من مربع الحوار
   const handleSaveMessage = (messageData: Partial<Message>) => {
     if (editingMessage) {
-      // Update existing message
+      // تحديث الرسالة الموجودة
       updateMessage({
         ...editingMessage,
         ...messageData
@@ -175,14 +188,15 @@ export function AccountDashboard() {
         description: "تم تعديل الرسالة بنجاح",
       });
     } else {
-      // Add new message
+      // إضافة رسالة جديدة
       addMessage({
         accountType: selectedAccount,
         messageType: messageData.messageType!,
         serialNumber: messageData.serialNumber!,
         amount: messageData.amount!,
         interest: messageData.interest!,
-        note: messageData.note
+        note: messageData.note,
+        customDate: selectedDate // استخدام التاريخ المحدد عند إضافة رسالة جديدة
       });
       toast({
         title: "تمت الإضافة",
@@ -192,9 +206,28 @@ export function AccountDashboard() {
     setIsMessageDialogOpen(false);
   };
   
+  // تحديث الرصيد اليومي تلقائيًا بناءً على القيم المتوقعة
+  const updateDailyBalanceToExpected = () => {
+    if (selectedAccount === 'brina') {
+      const expectedBalance = brinaFinals.expectedBalance;
+      setDailyBalanceInput(expectedBalance.toString());
+      
+      // حفظ القيمة تلقائيًا
+      addDailyBalanceRecord({
+        amount: expectedBalance,
+        date: selectedDate
+      });
+      
+      toast({
+        title: "تم التحديث",
+        description: `تم تحديث الرصيد اليومي لتاريخ ${formatDate(selectedDate)} إلى القيمة المتوقعة`,
+      });
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-wrap">
         <Tabs 
           value={selectedAccount} 
           onValueChange={(value) => setSelectedAccount(value as AccountType)}
@@ -237,6 +270,7 @@ export function AccountDashboard() {
                     }
                   }}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -332,6 +366,9 @@ export function AccountDashboard() {
           <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">الحسابات النهائية</CardTitle>
+              <CardDescription>
+                {formatDate(selectedDate)}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -355,7 +392,7 @@ export function AccountDashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">الحساب النهائي</CardTitle>
               <CardDescription>
-                {format(displayDate, 'yyyy/MM/dd')}
+                {formatDate(selectedDate)}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -367,14 +404,11 @@ export function AccountDashboard() {
                       value={dailyBalanceInput}
                       onChange={(e) => setDailyBalanceInput(e.target.value)}
                       className="w-full"
-                      disabled={dateFilter !== 'today'}
                     />
                   </div>
-                  {dateFilter === 'today' && (
-                    <Button size="sm" className="mr-2" onClick={saveDailyBalance}>
-                      حفظ
-                    </Button>
-                  )}
+                  <Button size="sm" className="mr-2" onClick={saveDailyBalance}>
+                    حفظ
+                  </Button>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">رصيد الأمس:</span>
@@ -390,6 +424,14 @@ export function AccountDashboard() {
                     {brinaFinals.balanceDifference.toLocaleString()} أوقية
                   </span>
                 </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full mt-2" 
+                  onClick={updateDailyBalanceToExpected}
+                >
+                  استخدام الرصيد المتوقع
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -405,10 +447,10 @@ export function AccountDashboard() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-auto">
             <Table>
               <TableCaption>
-                تاريخ {format(displayDate, 'yyyy/MM/dd')} - {filteredMessages.length > 0 
+                تاريخ {formatDate(selectedDate)} - {filteredMessages.length > 0 
                   ? `عدد الرسائل: ${filteredMessages.length}` 
                   : 'لا توجد رسائل لهذا اليوم'}
               </TableCaption>
@@ -488,6 +530,7 @@ export function AccountDashboard() {
         onSave={handleSaveMessage}
         message={editingMessage}
         accountType={selectedAccount}
+        selectedDate={selectedDate}
       />
     </div>
   );

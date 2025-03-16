@@ -14,16 +14,19 @@ import {
   calculateBrinaAccountFinals as calcBrinaFinals,
   filterMessages as filterMessagesByFilters
 } from './utils/AccountCalculations';
+import { getPreviousDay } from './utils/ChartUtils';
 
 interface GazaTelecomContextType {
   messages: Message[];
-  addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
+  addMessage: (message: Omit<Message, 'id' | 'timestamp'> & { customDate?: string }) => void;
   updateMessage: (message: Message) => void;
   deleteMessage: (messageId: string) => void;
-  dailyBalance: number;
-  setDailyBalance: (amount: number) => void;
-  previousDayBalance: number;
-  setPreviousDayBalance: (amount: number) => void;
+  dailyBalanceHistory: DailyBalance[];
+  addDailyBalanceRecord: (record: Omit<DailyBalance, 'date'> & { date?: string }) => void;
+  getHistoricalBalances: (days: number) => DailyBalance[];
+  getBalanceForDate: (date: string) => number;
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
   getMainAccountSummary: (date?: string) => AccountSummary;
   getBrinaAccountSummary: (date?: string) => AccountSummary;
   calculateMainAccountFinals: (date?: string) => {
@@ -44,12 +47,6 @@ interface GazaTelecomContextType {
     maxAmount?: number;
   }) => Message[];
   getMessagesByDate: (date?: string, accountType?: AccountType) => Message[];
-  dailyBalanceHistory: DailyBalance[];
-  addDailyBalanceRecord: (record: Omit<DailyBalance, 'date'>) => void;
-  getHistoricalBalances: (days: number) => DailyBalance[];
-  getBalanceForDate: (date: string) => number;
-  selectedDate: string;
-  setSelectedDate: (date: string) => void;
 }
 
 const GazaTelecomContext = createContext<GazaTelecomContextType | undefined>(undefined);
@@ -57,16 +54,12 @@ const GazaTelecomContext = createContext<GazaTelecomContextType | undefined>(und
 export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // حالة التطبيق
   const [messages, setMessages] = useState<Message[]>([]);
-  const [dailyBalance, setDailyBalance] = useState<number>(0);
-  const [previousDayBalance, setPreviousDayBalance] = useState<number>(0);
   const [dailyBalanceHistory, setDailyBalanceHistory] = useState<DailyBalance[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // تحميل البيانات من التخزين المحلي عند تحميل المكون
   useEffect(() => {
     setMessages(LocalStorageService.getMessages());
-    setDailyBalance(LocalStorageService.getDailyBalance());
-    setPreviousDayBalance(LocalStorageService.getPreviousDayBalance());
     setDailyBalanceHistory(LocalStorageService.getBalanceHistory());
   }, []);
 
@@ -76,23 +69,23 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [messages]);
 
   useEffect(() => {
-    LocalStorageService.saveDailyBalance(dailyBalance);
-  }, [dailyBalance]);
-
-  useEffect(() => {
-    LocalStorageService.savePreviousDayBalance(previousDayBalance);
-  }, [previousDayBalance]);
-
-  useEffect(() => {
     LocalStorageService.saveBalanceHistory(dailyBalanceHistory);
   }, [dailyBalanceHistory]);
 
   // إضافة رسالة جديدة
-  const addMessage = (newMessage: Omit<Message, 'id' | 'timestamp'>) => {
+  const addMessage = (newMessage: Omit<Message, 'id' | 'timestamp'> & { customDate?: string }) => {
+    const now = new Date();
+    const messageDate = newMessage.customDate ? new Date(newMessage.customDate) : now;
+    
+    // ضبط الوقت للتاريخ المخصص ليكون الوقت الحالي
+    if (newMessage.customDate) {
+      messageDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    }
+    
     const message: Message = {
       ...newMessage,
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+      timestamp: messageDate.toISOString(),
     };
     
     // إضافة الرسالة الأصلية
@@ -103,8 +96,8 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const brinaMessage: Message = {
         ...newMessage,
         accountType: 'brina',
-        id: (Date.now() + 1).toString(),
-        timestamp: new Date().toISOString(),
+        id: (Date.now() + 1).toString() + Math.random().toString(36).substr(2, 5),
+        timestamp: messageDate.toISOString(),
         note: (newMessage.note ? newMessage.note + ' - ' : '') + 'تم النسخ تلقائيًا من الحساب الرئيسي',
       };
       
@@ -165,9 +158,12 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const calculateBrinaAccountFinals = (date?: string) => {
-    const balance = getBalanceForDate(date || selectedDate);
-    const prevBalance = getPreviousDateBalance(date || selectedDate);
-    return calcBrinaFinals(getBrinaAccountSummary(date), balance, prevBalance);
+    const targetDate = date || selectedDate;
+    const currentBalance = getBalanceForDate(targetDate);
+    const previousDate = getPreviousDay(targetDate);
+    const previousBalance = getBalanceForDate(previousDate);
+    
+    return calcBrinaFinals(getBrinaAccountSummary(targetDate), currentBalance, previousBalance);
   };
 
   // الحصول على رصيد لتاريخ معين
@@ -175,31 +171,21 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const record = dailyBalanceHistory.find(item => item.date === date);
     return record ? record.amount : 0;
   };
-  
-  // الحصول على رصيد اليوم السابق
-  const getPreviousDateBalance = (date: string): number => {
-    const targetDate = new Date(date);
-    targetDate.setDate(targetDate.getDate() - 1);
-    const prevDateStr = targetDate.toISOString().split('T')[0];
-    
-    const record = dailyBalanceHistory.find(item => item.date === prevDateStr);
-    return record ? record.amount : 0;
-  };
 
   // إضافة سجل رصيد يومي جديد
-  const addDailyBalanceRecord = (record: Omit<DailyBalance, 'date'>) => {
-    const today = new Date().toISOString().split('T')[0];
+  const addDailyBalanceRecord = (record: Omit<DailyBalance, 'date'> & { date?: string }) => {
+    const targetDate = record.date || new Date().toISOString().split('T')[0];
     
     // التحقق من وجود سجل لهذا اليوم
     const existingRecordIndex = dailyBalanceHistory.findIndex(
-      item => item.date === today
+      item => item.date === targetDate
     );
     
     if (existingRecordIndex !== -1) {
       // تحديث السجل الموجود
       const updatedHistory = [...dailyBalanceHistory];
       updatedHistory[existingRecordIndex] = {
-        date: today,
+        date: targetDate,
         amount: record.amount
       };
       setDailyBalanceHistory(updatedHistory);
@@ -207,24 +193,8 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // إضافة سجل جديد
       setDailyBalanceHistory(prev => [
         ...prev,
-        { date: today, amount: record.amount }
+        { date: targetDate, amount: record.amount }
       ]);
-    }
-    
-    // تحديث رصيد اليوم
-    setDailyBalance(record.amount);
-    
-    // تخزين رصيد الأمس
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    const yesterdayRecord = dailyBalanceHistory.find(
-      item => item.date === yesterdayStr
-    );
-    
-    if (yesterdayRecord) {
-      setPreviousDayBalance(yesterdayRecord.amount);
     }
   };
 
@@ -255,22 +225,18 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
         addMessage,
         updateMessage,
         deleteMessage,
-        dailyBalance,
-        setDailyBalance,
-        previousDayBalance,
-        setPreviousDayBalance,
+        dailyBalanceHistory,
+        addDailyBalanceRecord,
+        getHistoricalBalances,
+        getBalanceForDate,
+        selectedDate,
+        setSelectedDate,
         getMainAccountSummary,
         getBrinaAccountSummary,
         calculateMainAccountFinals,
         calculateBrinaAccountFinals,
         filterMessages,
-        dailyBalanceHistory,
-        addDailyBalanceRecord,
-        getHistoricalBalances,
-        getMessagesByDate,
-        getBalanceForDate,
-        selectedDate,
-        setSelectedDate
+        getMessagesByDate
       }}
     >
       {children}

@@ -9,12 +9,120 @@ import { MessageForm } from '@/components/gazatelecom/MessageForm';
 import { AccountDashboard } from '@/components/gazatelecom/AccountDashboard';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon, Database, Printer, FileText, Calendar } from 'lucide-react';
-import { GazaTelecomProvider } from '@/components/gazatelecom/GazaTelecomContext';
+import { GazaTelecomProvider, useGazaTelecom } from '@/components/gazatelecom/GazaTelecomContext';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { useToast } from '@/components/ui/use-toast';
 import { DatabaseService } from '@/components/gazatelecom/services/DatabaseService';
 import { Letterhead, PrintHeader } from '@/components/ui/letterhead';
+import { formatDate } from '@/components/gazatelecom/utils/ChartUtils';
+
+const PrintContent = () => {
+  const { 
+    selectedDate,
+    getMainAccountSummary,
+    getBrinaAccountSummary,
+    calculateMainAccountFinals,
+    calculateBrinaAccountFinals,
+    getMessagesByDate,
+    getBalanceForDate
+  } = useGazaTelecom();
+
+  // الحصول على البيانات للتاريخ المحدد
+  const mainSummary = getMainAccountSummary(selectedDate);
+  const brinaSummary = getBrinaAccountSummary(selectedDate);
+  const mainFinals = calculateMainAccountFinals(selectedDate);
+  const brinaFinals = calculateBrinaAccountFinals(selectedDate);
+  const allMessages = getMessagesByDate(selectedDate);
+  const currentBalance = getBalanceForDate(selectedDate);
+  const previousDate = new Date(selectedDate);
+  previousDate.setDate(previousDate.getDate() - 1);
+  const previousDateStr = previousDate.toISOString().split('T')[0];
+  const previousBalance = getBalanceForDate(previousDateStr);
+
+  // ملء بيانات الطباعة عند تحميل المكون
+  useEffect(() => {
+    // بيانات الحساب الرئيسي
+    document.getElementById('print-main-incoming')!.textContent = mainSummary.incomingTotal.toLocaleString();
+    document.getElementById('print-main-outgoing')!.textContent = mainSummary.outgoingTotal.toLocaleString();
+    document.getElementById('print-main-final1')!.textContent = mainFinals.final1.toLocaleString();
+    document.getElementById('print-main-final2')!.textContent = mainFinals.final2.toLocaleString();
+    document.getElementById('print-main-interest')!.textContent = mainFinals.totalInterest.toLocaleString();
+    
+    // بيانات حساب برينة
+    document.getElementById('print-brina-incoming')!.textContent = brinaSummary.incomingTotal.toLocaleString();
+    document.getElementById('print-brina-outgoing')!.textContent = brinaSummary.outgoingTotal.toLocaleString();
+    document.getElementById('print-brina-prev-balance')!.textContent = previousBalance.toLocaleString();
+    document.getElementById('print-brina-current-balance')!.textContent = currentBalance.toLocaleString();
+    document.getElementById('print-brina-diff')!.textContent = brinaFinals.balanceDifference.toLocaleString();
+    
+    // نموذج A5
+    document.getElementById('print-a5-main-incoming')!.textContent = mainSummary.incomingTotal.toLocaleString();
+    document.getElementById('print-a5-main-outgoing')!.textContent = mainSummary.outgoingTotal.toLocaleString();
+    document.getElementById('print-a5-main-final1')!.textContent = mainFinals.final1.toLocaleString();
+    document.getElementById('print-a5-main-final2')!.textContent = mainFinals.final2.toLocaleString();
+    document.getElementById('print-a5-brina-incoming')!.textContent = brinaSummary.incomingTotal.toLocaleString();
+    document.getElementById('print-a5-brina-outgoing')!.textContent = brinaSummary.outgoingTotal.toLocaleString();
+    document.getElementById('print-a5-brina-balance')!.textContent = currentBalance.toLocaleString();
+    document.getElementById('print-a5-brina-diff')!.textContent = brinaFinals.balanceDifference.toLocaleString();
+    
+    // جدول الرسائل
+    const messagesBody = document.getElementById('print-messages-body');
+    if (messagesBody) {
+      messagesBody.innerHTML = '';
+      
+      allMessages.forEach(message => {
+        const row = document.createElement('tr');
+        
+        const timeCell = document.createElement('td');
+        timeCell.className = 'border p-2 text-right';
+        timeCell.textContent = new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        
+        const accountCell = document.createElement('td');
+        accountCell.className = 'border p-2 text-right';
+        accountCell.textContent = message.accountType === 'main' ? 'الرئيسي' : 'برينة';
+        
+        const typeCell = document.createElement('td');
+        typeCell.className = 'border p-2 text-right';
+        typeCell.textContent = message.messageType === 'outgoing' ? 'صادر' : 'وارد';
+        
+        const serialCell = document.createElement('td');
+        serialCell.className = 'border p-2 text-right';
+        serialCell.textContent = message.serialNumber;
+        
+        const amountCell = document.createElement('td');
+        amountCell.className = 'border p-2 text-right';
+        amountCell.textContent = message.amount.toLocaleString();
+        
+        const interestCell = document.createElement('td');
+        interestCell.className = 'border p-2 text-right';
+        interestCell.textContent = message.interest.toLocaleString();
+        
+        const noteCell = document.createElement('td');
+        noteCell.className = 'border p-2 text-right';
+        noteCell.textContent = message.note || '-';
+        
+        row.appendChild(timeCell);
+        row.appendChild(accountCell);
+        row.appendChild(typeCell);
+        row.appendChild(serialCell);
+        row.appendChild(amountCell);
+        row.appendChild(interestCell);
+        row.appendChild(noteCell);
+        
+        messagesBody.appendChild(row);
+      });
+    }
+    
+    // تاريخ التقرير
+    const reportDateElements = document.querySelectorAll('.print-report-date');
+    reportDateElements.forEach(element => {
+      element.textContent = formatDate(selectedDate);
+    });
+  }, [selectedDate, mainSummary, brinaSummary, mainFinals, brinaFinals, allMessages, currentBalance, previousBalance]);
+  
+  return null;
+};
 
 const GazaTelecom = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -172,9 +280,21 @@ const GazaTelecom = () => {
           </TabsContent>
         </Tabs>
         
-        {/* قسم للطباعة - سيكون مرئيًا فقط عند الطباعة */}
+        {/* PrintContent لملء عناصر الطباعة */}
+        <PrintContent />
+        
+        {/* قسم للطباعة A4 - سيكون مرئيًا فقط عند الطباعة */}
         <div className="print-section print-a4 hidden">
           <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" />
+          
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">تقرير يوم: <span className="print-report-date"></span></h2>
+            <img 
+              src="/lovable-uploads/e5554b5c-e82d-452f-9a5d-884565624233.png" 
+              alt="طيبة المدينة تلكوم"
+              className="h-12 w-auto" 
+            />
+          </div>
           
           <div className="mb-8">
             <h3 className="text-lg font-bold mb-2">ملخص الحساب الرئيسي</h3>
@@ -258,6 +378,15 @@ const GazaTelecom = () => {
         <div className="print-section print-a5 hidden">
           <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" size="a5" />
           
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-base font-bold">تقرير يوم: <span className="print-report-date"></span></h2>
+            <img 
+              src="/lovable-uploads/e5554b5c-e82d-452f-9a5d-884565624233.png" 
+              alt="طيبة المدينة تلكوم"
+              className="h-8 w-auto" 
+            />
+          </div>
+          
           <div className="mb-4">
             <h3 className="text-base font-bold mb-1">ملخص الحساب الرئيسي</h3>
             <table className="w-full border-collapse mb-3 text-sm">
@@ -304,9 +433,12 @@ const GazaTelecom = () => {
             <div className="flex justify-between">
               <div>
                 <p>تاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
+                <p>طيبة المدينة تلكوم</p>
+                <p>22371138 / 41101138</p>
               </div>
               <div>
                 <p>توقيع المسؤول: _______</p>
+                <p>الختم الرسمي</p>
               </div>
             </div>
           </div>

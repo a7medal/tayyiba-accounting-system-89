@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Message, AccountType, MessageType } from './models/MessageModel';
+import { formatDate } from './utils/ChartUtils';
 
 interface MessageDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface MessageDialogProps {
   onSave: (message: Partial<Message>) => void;
   message: Message | null;
   accountType: AccountType;
+  selectedDate: string;
 }
 
 export function MessageDialog({ 
@@ -34,7 +36,8 @@ export function MessageDialog({
   onOpenChange, 
   onSave, 
   message, 
-  accountType 
+  accountType,
+  selectedDate
 }: MessageDialogProps) {
   const [messageType, setMessageType] = useState<MessageType>('outgoing');
   const [serialNumber, setSerialNumber] = useState('');
@@ -98,7 +101,10 @@ export function MessageDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{message ? 'تعديل رسالة' : 'إضافة رسالة جديدة'}</DialogTitle>
+          <DialogTitle>
+            {message ? 'تعديل رسالة' : 'إضافة رسالة جديدة'}
+            {selectedDate && ` - ${formatDate(selectedDate)}`}
+          </DialogTitle>
           <DialogDescription>
             {message 
               ? 'قم بتعديل بيانات الرسالة ثم اضغط على حفظ' 
