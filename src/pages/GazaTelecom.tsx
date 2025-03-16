@@ -144,7 +144,7 @@ const GazaTelecom = () => {
               className="h-12 w-auto" 
             />
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">غزة تليكوم</h1>
+              <h1 className="text-3xl font-bold tracking-tight">غزة تلكوم</h1>
               <p className="text-muted-foreground mt-2">
                 نظام إدارة الحسابات والرسائل المتكامل
               </p>
@@ -224,7 +224,7 @@ const GazaTelecom = () => {
         
         {/* قسم للطباعة A4 - سيكون مرئيًا فقط عند الطباعة */}
         <div className="print-section print-a4 hidden">
-          <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" />
+          <PrintHeader title="تقرير العمليات المالية - غزة تلكوم" />
           
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">تقرير يوم: <span className="print-report-date"></span></h2>
@@ -315,7 +315,7 @@ const GazaTelecom = () => {
         
         {/* نموذج الطباعة A5 */}
         <div className="print-section print-a5 hidden">
-          <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" size="a5" />
+          <PrintHeader title="تقرير العمليات المالية - غزة تيليكوم" size="A5" />
           
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-base font-bold">تقرير يوم: <span className="print-report-date"></span></h2>
