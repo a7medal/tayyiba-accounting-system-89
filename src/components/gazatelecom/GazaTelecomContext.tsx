@@ -8,6 +8,7 @@ import {
   AccountSummary 
 } from './models/MessageModel';
 import { LocalStorageService } from './services/LocalStorageService';
+import { DatabaseService } from './services/DatabaseService';
 import { 
   calculateAccountSummary, 
   calculateMainAccountFinals as calcMainFinals,
@@ -56,24 +57,90 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [messages, setMessages] = useState<Message[]>([]);
   const [dailyBalanceHistory, setDailyBalanceHistory] = useState<DailyBalance[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // تحميل البيانات من التخزين المحلي عند تحميل المكون
+  // تحميل البيانات من قاعدة البيانات عند تحميل المكون
   useEffect(() => {
-    setMessages(LocalStorageService.getMessages());
-    setDailyBalanceHistory(LocalStorageService.getBalanceHistory());
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // التحقق من حالة الاتصال بقاعدة البيانات
+        const isConnected = DatabaseService.isConnected();
+        
+        if (isConnected) {
+          // إذا كان هناك اتصال بقاعدة البيانات، نستخدمها
+          console.log('تحميل البيانات من قاعدة البيانات...');
+          const loadedMessages = await DatabaseService.getMessages();
+          setMessages(loadedMessages);
+          
+          const loadedBalances = await DatabaseService.getDailyBalances();
+          setDailyBalanceHistory(loadedBalances);
+        } else {
+          // إذا لم يكن هناك اتصال، نستخدم التخزين المحلي
+          console.log('تحميل البيانات من التخزين المحلي...');
+          setMessages(LocalStorageService.getMessages());
+          setDailyBalanceHistory(LocalStorageService.getBalanceHistory());
+        }
+      } catch (error) {
+        console.error('خطأ في تحميل البيانات:', error);
+        // في حالة حدوث خطأ، نستخدم التخزين المحلي
+        setMessages(LocalStorageService.getMessages());
+        setDailyBalanceHistory(LocalStorageService.getBalanceHistory());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
-  // حفظ البيانات في التخزين المحلي عند تغيرها
+  // حفظ البيانات في قاعدة البيانات أو التخزين المحلي عند تغيرها
   useEffect(() => {
-    LocalStorageService.saveMessages(messages);
-  }, [messages]);
+    if (isLoading) return; // تجنب حفظ البيانات أثناء التحميل الأولي
+    
+    const saveData = async () => {
+      try {
+        if (DatabaseService.isConnected()) {
+          // لا نحتاج إلى حفظ الرسائل بشكل جماعي لأننا نحفظها بشكل فردي عند إضافتها أو تعديلها
+          console.log('البيانات محفوظة في قاعدة البيانات');
+        } else {
+          // إذا لم يكن هناك اتصال، نستخدم التخزين المحلي
+          LocalStorageService.saveMessages(messages);
+          console.log('تم حفظ الرسائل في التخزين المحلي');
+        }
+      } catch (error) {
+        console.error('خطأ في حفظ البيانات:', error);
+        // في حالة حدوث خطأ، نستخدم التخزين المحلي
+        LocalStorageService.saveMessages(messages);
+      }
+    };
+    
+    saveData();
+  }, [messages, isLoading]);
 
   useEffect(() => {
-    LocalStorageService.saveBalanceHistory(dailyBalanceHistory);
-  }, [dailyBalanceHistory]);
+    if (isLoading) return; // تجنب حفظ البيانات أثناء التحميل الأولي
+    
+    const saveBalances = async () => {
+      try {
+        if (DatabaseService.isConnected()) {
+          // في الواقع، نحن نحفظ الأرصدة بشكل فردي في دالة addDailyBalanceRecord
+          console.log('الأرصدة محفوظة في قاعدة البيانات');
+        } else {
+          LocalStorageService.saveBalanceHistory(dailyBalanceHistory);
+          console.log('تم حفظ الأرصدة في التخزين المحلي');
+        }
+      } catch (error) {
+        console.error('خطأ في حفظ الأرصدة:', error);
+        LocalStorageService.saveBalanceHistory(dailyBalanceHistory);
+      }
+    };
+    
+    saveBalances();
+  }, [dailyBalanceHistory, isLoading]);
 
   // إضافة رسالة جديدة
-  const addMessage = (newMessage: Omit<Message, 'id' | 'timestamp'> & { customDate?: string }) => {
+  const addMessage = async (newMessage: Omit<Message, 'id' | 'timestamp'> & { customDate?: string }) => {
     const now = new Date();
     const messageDate = newMessage.customDate ? new Date(newMessage.customDate) : now;
     
@@ -88,35 +155,106 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
       timestamp: messageDate.toISOString(),
     };
     
-    // إضافة الرسالة الأصلية
-    setMessages(prev => [...prev, message]);
-    
-    // إذا كانت الرسالة واردة للحساب الرئيسي، قم بنسخها لحساب برينة تلقائيًا
-    if (newMessage.accountType === 'main' && newMessage.messageType === 'incoming') {
-      const brinaMessage: Message = {
-        ...newMessage,
-        accountType: 'brina',
-        id: (Date.now() + 1).toString() + Math.random().toString(36).substr(2, 5),
-        timestamp: messageDate.toISOString(),
-        note: (newMessage.note ? newMessage.note + ' - ' : '') + 'تم النسخ تلقائيًا من الحساب الرئيسي',
-      };
+    try {
+      if (DatabaseService.isConnected()) {
+        // حفظ الرسالة في قاعدة البيانات
+        const savedMessage = await DatabaseService.saveMessage(message);
+        
+        // إضافة الرسالة للحالة المحلية
+        setMessages(prev => [...prev, savedMessage]);
+        
+        // إذا كانت الرسالة واردة للحساب الرئيسي، قم بنسخها لحساب برينة تلقائيًا
+        if (newMessage.accountType === 'main' && newMessage.messageType === 'incoming') {
+          const brinaMessage: Message = {
+            ...newMessage,
+            accountType: 'brina',
+            id: (Date.now() + 1).toString() + Math.random().toString(36).substr(2, 5),
+            timestamp: messageDate.toISOString(),
+            note: (newMessage.note ? newMessage.note + ' - ' : '') + 'تم النسخ تلقائيًا من الحساب الرئيسي',
+          };
+          
+          const savedBrinaMessage = await DatabaseService.saveMessage(brinaMessage);
+          setMessages(prev => [...prev, savedBrinaMessage]);
+        }
+      } else {
+        // إضافة الرسالة للحالة المحلية
+        setMessages(prev => [...prev, message]);
+        
+        // إذا كانت الرسالة واردة للحساب الرئيسي، قم بنسخها لحساب برينة تلقائيًا
+        if (newMessage.accountType === 'main' && newMessage.messageType === 'incoming') {
+          const brinaMessage: Message = {
+            ...newMessage,
+            accountType: 'brina',
+            id: (Date.now() + 1).toString() + Math.random().toString(36).substr(2, 5),
+            timestamp: messageDate.toISOString(),
+            note: (newMessage.note ? newMessage.note + ' - ' : '') + 'تم النسخ تلقائيًا من الحساب الرئيسي',
+          };
+          
+          setMessages(prev => [...prev, brinaMessage]);
+        }
+      }
+    } catch (error) {
+      console.error('خطأ في إضافة الرسالة:', error);
       
-      setMessages(prev => [...prev, brinaMessage]);
+      // في حالة حدوث خطأ، نضيف الرسالة محليًا فقط
+      setMessages(prev => [...prev, message]);
+      
+      if (newMessage.accountType === 'main' && newMessage.messageType === 'incoming') {
+        const brinaMessage: Message = {
+          ...newMessage,
+          accountType: 'brina',
+          id: (Date.now() + 1).toString() + Math.random().toString(36).substr(2, 5),
+          timestamp: messageDate.toISOString(),
+          note: (newMessage.note ? newMessage.note + ' - ' : '') + 'تم النسخ تلقائيًا من الحساب الرئيسي',
+        };
+        
+        setMessages(prev => [...prev, brinaMessage]);
+      }
     }
   };
   
   // تعديل رسالة
-  const updateMessage = (updatedMessage: Message) => {
-    setMessages(prev => 
-      prev.map(message => 
-        message.id === updatedMessage.id ? updatedMessage : message
-      )
-    );
+  const updateMessage = async (updatedMessage: Message) => {
+    try {
+      if (DatabaseService.isConnected()) {
+        // تحديث الرسالة في قاعدة البيانات
+        await DatabaseService.updateMessage(updatedMessage);
+      }
+      
+      // تحديث الحالة المحلية
+      setMessages(prev => 
+        prev.map(message => 
+          message.id === updatedMessage.id ? updatedMessage : message
+        )
+      );
+    } catch (error) {
+      console.error('خطأ في تحديث الرسالة:', error);
+      
+      // في حالة حدوث خطأ، نحدث الحالة المحلية فقط
+      setMessages(prev => 
+        prev.map(message => 
+          message.id === updatedMessage.id ? updatedMessage : message
+        )
+      );
+    }
   };
   
   // حذف رسالة
-  const deleteMessage = (messageId: string) => {
-    setMessages(prev => prev.filter(message => message.id !== messageId));
+  const deleteMessage = async (messageId: string) => {
+    try {
+      if (DatabaseService.isConnected()) {
+        // حذف الرسالة من قاعدة البيانات
+        await DatabaseService.deleteMessage(messageId);
+      }
+      
+      // تحديث الحالة المحلية
+      setMessages(prev => prev.filter(message => message.id !== messageId));
+    } catch (error) {
+      console.error('خطأ في حذف الرسالة:', error);
+      
+      // في حالة حدوث خطأ، نحدث الحالة المحلية فقط
+      setMessages(prev => prev.filter(message => message.id !== messageId));
+    }
   };
 
   // الحصول على الرسائل حسب التاريخ
@@ -173,28 +311,50 @@ export const GazaTelecomProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // إضافة سجل رصيد يومي جديد
-  const addDailyBalanceRecord = (record: Omit<DailyBalance, 'date'> & { date?: string }) => {
+  const addDailyBalanceRecord = async (record: Omit<DailyBalance, 'date'> & { date?: string }) => {
     const targetDate = record.date || new Date().toISOString().split('T')[0];
+    const balanceRecord: DailyBalance = {
+      date: targetDate,
+      amount: record.amount
+    };
     
-    // التحقق من وجود سجل لهذا اليوم
-    const existingRecordIndex = dailyBalanceHistory.findIndex(
-      item => item.date === targetDate
-    );
-    
-    if (existingRecordIndex !== -1) {
-      // تحديث السجل الموجود
-      const updatedHistory = [...dailyBalanceHistory];
-      updatedHistory[existingRecordIndex] = {
-        date: targetDate,
-        amount: record.amount
-      };
-      setDailyBalanceHistory(updatedHistory);
-    } else {
-      // إضافة سجل جديد
-      setDailyBalanceHistory(prev => [
-        ...prev,
-        { date: targetDate, amount: record.amount }
-      ]);
+    try {
+      if (DatabaseService.isConnected()) {
+        // حفظ الرصيد في قاعدة البيانات
+        await DatabaseService.saveDailyBalance(balanceRecord);
+      }
+      
+      // التحقق من وجود سجل لهذا اليوم
+      const existingRecordIndex = dailyBalanceHistory.findIndex(
+        item => item.date === targetDate
+      );
+      
+      if (existingRecordIndex !== -1) {
+        // تحديث السجل الموجود
+        const updatedHistory = [...dailyBalanceHistory];
+        updatedHistory[existingRecordIndex] = balanceRecord;
+        setDailyBalanceHistory(updatedHistory);
+      } else {
+        // إضافة سجل جديد
+        setDailyBalanceHistory(prev => [...prev, balanceRecord]);
+      }
+    } catch (error) {
+      console.error('خطأ في حفظ الرصيد اليومي:', error);
+      
+      // في حالة حدوث خطأ، نحدث الحالة المحلية فقط
+      const existingRecordIndex = dailyBalanceHistory.findIndex(
+        item => item.date === targetDate
+      );
+      
+      if (existingRecordIndex !== -1) {
+        // تحديث السجل الموجود
+        const updatedHistory = [...dailyBalanceHistory];
+        updatedHistory[existingRecordIndex] = balanceRecord;
+        setDailyBalanceHistory(updatedHistory);
+      } else {
+        // إضافة سجل جديد
+        setDailyBalanceHistory(prev => [...prev, balanceRecord]);
+      }
     }
   };
 

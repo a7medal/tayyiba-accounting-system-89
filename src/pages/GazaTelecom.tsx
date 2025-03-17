@@ -28,7 +28,6 @@ const PrintContent = () => {
     getBalanceForDate
   } = useGazaTelecom();
 
-  // الحصول على البيانات للتاريخ المحدد
   const mainSummary = getMainAccountSummary(selectedDate);
   const brinaSummary = getBrinaAccountSummary(selectedDate);
   const mainFinals = calculateMainAccountFinals(selectedDate);
@@ -40,23 +39,19 @@ const PrintContent = () => {
   const previousDateStr = previousDate.toISOString().split('T')[0];
   const previousBalance = getBalanceForDate(previousDateStr);
 
-  // ملء بيانات الطباعة عند تحميل المكون
   useEffect(() => {
-    // بيانات الحساب الرئيسي
     document.getElementById('print-main-incoming')!.textContent = mainSummary.incomingTotal.toLocaleString();
     document.getElementById('print-main-outgoing')!.textContent = mainSummary.outgoingTotal.toLocaleString();
     document.getElementById('print-main-final1')!.textContent = mainFinals.final1.toLocaleString();
     document.getElementById('print-main-final2')!.textContent = mainFinals.final2.toLocaleString();
     document.getElementById('print-main-interest')!.textContent = mainFinals.totalInterest.toLocaleString();
     
-    // بيانات حساب برينة
     document.getElementById('print-brina-incoming')!.textContent = brinaSummary.incomingTotal.toLocaleString();
     document.getElementById('print-brina-outgoing')!.textContent = brinaSummary.outgoingTotal.toLocaleString();
     document.getElementById('print-brina-prev-balance')!.textContent = previousBalance.toLocaleString();
     document.getElementById('print-brina-current-balance')!.textContent = currentBalance.toLocaleString();
     document.getElementById('print-brina-diff')!.textContent = brinaFinals.balanceDifference.toLocaleString();
     
-    // نموذج A5
     document.getElementById('print-a5-main-incoming')!.textContent = mainSummary.incomingTotal.toLocaleString();
     document.getElementById('print-a5-main-outgoing')!.textContent = mainSummary.outgoingTotal.toLocaleString();
     document.getElementById('print-a5-main-final1')!.textContent = mainFinals.final1.toLocaleString();
@@ -66,7 +61,6 @@ const PrintContent = () => {
     document.getElementById('print-a5-brina-balance')!.textContent = currentBalance.toLocaleString();
     document.getElementById('print-a5-brina-diff')!.textContent = brinaFinals.balanceDifference.toLocaleString();
     
-    // جدول الرسائل
     const messagesBody = document.getElementById('print-messages-body');
     if (messagesBody) {
       messagesBody.innerHTML = '';
@@ -114,7 +108,6 @@ const PrintContent = () => {
       });
     }
     
-    // تاريخ التقرير
     const reportDateElements = document.querySelectorAll('.print-report-date');
     reportDateElements.forEach(element => {
       element.textContent = formatDate(selectedDate);
@@ -128,6 +121,29 @@ const GazaTelecom = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const connectToDatabase = async () => {
+      try {
+        if (!DatabaseService.isConnected()) {
+          const connected = await DatabaseService.connect();
+          if (connected) {
+            console.log('تم الاتصال بقاعدة البيانات بنجاح عند تحميل الصفحة');
+            toast({
+              title: "تم الاتصال بقاعدة البيانات",
+              description: "تم الاتصال بقاعدة البيانات بنجاح",
+            });
+          } else {
+            console.log('فشل الاتصال بقاعدة البيانات عند تحميل الصفحة');
+          }
+        }
+      } catch (error) {
+        console.error('خطأ في الاتصال بقاعدة البيانات:', error);
+      }
+    };
+    
+    connectToDatabase();
+  }, [toast]);
 
   const handlePrint = () => {
     window.print();
@@ -219,10 +235,8 @@ const GazaTelecom = () => {
           </>
         )}
         
-        {/* PrintContent لملء عناصر الطباعة */}
         <PrintContent />
         
-        {/* قسم للطباعة A4 - سيكون مرئيًا فقط عند الطباعة */}
         <div className="print-section print-a4 hidden">
           <PrintHeader title="تقرير العمليات المالية - غزة تلكوم" />
           
@@ -295,7 +309,6 @@ const GazaTelecom = () => {
               </tr>
             </thead>
             <tbody id="print-messages-body">
-              {/* سيتم ملء هذا الجزء ديناميكيًا عند الطباعة */}
             </tbody>
           </table>
           
@@ -313,9 +326,8 @@ const GazaTelecom = () => {
           </div>
         </div>
         
-        {/* نموذج الطباعة A5 */}
         <div className="print-section print-a5 hidden">
-          <PrintHeader title="تقرير العمليات المالية - غزة تلكوم" size="A5" />
+          <PrintHeader title="تقرير العمليات المالية - غزة تلكوم" size="a5" />
           
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-base font-bold">تقرير يوم: <span className="print-report-date"></span></h2>
