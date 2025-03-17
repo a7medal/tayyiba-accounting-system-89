@@ -23,6 +23,7 @@ import GazaTelecom from "@/pages/GazaTelecom";
 import Accounts from "@/pages/Accounts";
 import Bonds from "@/pages/Bonds";
 import Profile from "@/pages/Profile";
+import Debts from "@/pages/Debts";
 import { AuthProvider } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
                 <Route path="/gaza-telecom" element={<GazaTelecom />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/debts" element={<Debts />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
