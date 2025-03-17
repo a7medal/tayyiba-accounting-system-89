@@ -13,6 +13,8 @@ export interface Message {
   interest: number;
   note?: string;
   timestamp: string;
+  retracted?: boolean;
+  retractionDate?: string;
 }
 
 export interface DailyBalance {
