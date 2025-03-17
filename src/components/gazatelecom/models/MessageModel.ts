@@ -75,3 +75,24 @@ export interface AccountTransaction {
   relatedAccountId?: string; // في حالة التحويل
   relatedAccountName?: string; // في حالة التحويل
 }
+
+// إضافة واجهة لعمليات الدين
+export interface DebtPayment {
+  id: string;
+  debtId: string;
+  amount: number;
+  date: string;
+  notes?: string;
+}
+
+// لتتبع سجل المعاملات على مستوى الكيان (العميل/المورد)
+export interface EntityTransaction {
+  id: string;
+  entityId: string;
+  entityType: 'client' | 'supplier';
+  transactionType: 'payment' | 'invoice' | 'purchase' | 'refund';
+  amount: number;
+  date: string;
+  referenceId: string;
+  notes?: string;
+}

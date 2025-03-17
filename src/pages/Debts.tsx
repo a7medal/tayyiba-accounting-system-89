@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,9 +34,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { AppDatabase } from '@/services/DatabaseService';
 import { DatabaseSettings } from '@/components/shared/DatabaseSettings';
-import { Debt } from '@/components/gazatelecom/models/MessageModel';
-import { Search, Download, FileText, Plus, Calendar, Eye, CreditCard } from 'lucide-react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { Debt, DebtPayment } from '@/components/gazatelecom/models/MessageModel';
+import { Search, Download, FileText, Plus, CreditCard } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -49,6 +48,7 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { DebtService } from '@/services/DebtService';
 
 export default function Debts() {
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -58,6 +58,7 @@ export default function Debts() {
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showEntityStatementDialog, setShowEntityStatementDialog] = useState(false);
+  const [payments, setPayments] = useState<DebtPayment[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -144,6 +145,16 @@ export default function Debts() {
     }
   };
 
+  const loadPaymentsForDebt = (debtId: string) => {
+    try {
+      const debtPayments = DebtService.getPaymentsForDebt(debtId);
+      setPayments(debtPayments);
+    } catch (error) {
+      console.error("خطأ في تحميل المدفوعات:", error);
+      setPayments([]);
+    }
+  };
+
   const handleProcessPayment = async (data: any) => {
     if (!selectedDebt) return;
     
@@ -169,9 +180,23 @@ export default function Debts() {
         lastPaymentDate: data.paymentDate
       };
 
+      const newPayment: DebtPayment = {
+        id: Date.now().toString(),
+        debtId: selectedDebt.id,
+        amount: paymentAmount,
+        date: data.paymentDate,
+        notes: data.notes
+      };
+      
+      DebtService.saveDebtPayment(newPayment);
+
       if (AppDatabase.isConnected()) {
         await AppDatabase.saveDebt(updatedDebt);
         await loadDebts();
+        if (showEntityStatementDialog) {
+          loadPaymentsForDebt(selectedDebt.id);
+        }
+        
         toast({
           title: "تم الدفع",
           description: "تم تسجيل الدفعة بنجاح",
@@ -190,7 +215,11 @@ export default function Debts() {
   };
 
   const getEntityStatement = (entityId: string, entityType: 'client' | 'supplier') => {
-    setSelectedDebt(debts.find(d => d.entityId === entityId && d.entityType === entityType) || null);
+    const debt = debts.find(d => d.entityId === entityId && d.entityType === entityType);
+    setSelectedDebt(debt || null);
+    if (debt) {
+      loadPaymentsForDebt(debt.id);
+    }
     setShowEntityStatementDialog(true);
   };
 
@@ -502,7 +531,6 @@ export default function Debts() {
         </>
       )}
 
-      {/* حوار إضافة دفعة */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
@@ -579,7 +607,6 @@ export default function Debts() {
         </DialogContent>
       </Dialog>
 
-      {/* حوار كشف حساب */}
       <Dialog open={showEntityStatementDialog} onOpenChange={setShowEntityStatementDialog}>
         <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
@@ -632,26 +659,34 @@ export default function Debts() {
               </div>
             </div>
             
-            {/* يمكن إضافة جدول المدفوعات هنا */}
             <div className="mt-4">
-              <h3 className="font-semibold mb-2">المعاملات</h3>
+              <h3 className="font-semibold mb-2">المدفوعات</h3>
               <p className="text-sm text-muted-foreground mb-2">سجل المدفوعات والمعاملات</p>
               <div className="border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>التاريخ</TableHead>
-                      <TableHead>النوع</TableHead>
                       <TableHead>المبلغ</TableHead>
                       <TableHead>الملاحظات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                        لا توجد معاملات متاحة
-                      </TableCell>
-                    </TableRow>
+                    {payments.length > 0 ? (
+                      payments.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>{new Date(payment.date).toLocaleDateString('ar-SA')}</TableCell>
+                          <TableCell>{payment.amount.toLocaleString()} أوقية</TableCell>
+                          <TableCell>{payment.notes || '-'}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                          لا توجد مدفوعات مسجلة
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
