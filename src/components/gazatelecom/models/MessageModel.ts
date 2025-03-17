@@ -60,3 +60,18 @@ export interface Debt {
   lastPaymentDate?: string; // تاريخ آخر دفعة
   notes?: string; // ملاحظات
 }
+
+// نموذج عمليات الحساب (سحب، إيداع، تحويل)
+export interface AccountTransaction {
+  id: string;
+  accountId: string;
+  accountName: string;
+  transactionType: 'withdrawal' | 'deposit' | 'transfer';
+  amount: number;
+  date: string;
+  notes?: string;
+  reference?: string;
+  status: 'completed' | 'pending' | 'failed';
+  relatedAccountId?: string; // في حالة التحويل
+  relatedAccountName?: string; // في حالة التحويل
+}
