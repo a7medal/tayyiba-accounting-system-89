@@ -18,7 +18,7 @@ import {
   Send,
   CreditCard,
   FileCheck,
-  DollarSign  // أيقونة تعبر عن الدين
+  Coin  // أيقونة تعبر عن النقود
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -58,9 +58,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
   const { logout, user, hasPermission } = useAuth();
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   const isAdmin = user?.role === 'admin';
   const canViewSuppliers = hasPermission('عرض الموردين');
@@ -101,12 +99,21 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       <div className="space-y-1 px-3">
         {!collapsed ? (
           <>
+            {/* لوحة التحكم */}
             <SidebarLink 
               to="/" 
               icon={<LayoutDashboard className="h-5 w-5" />}
               isActive={isActive("/")}
             >
               لوحة التحكم
+            </SidebarLink>
+            {/* صفحة الديون - تظهر مباشرة بعد لوحة التحكم */}
+            <SidebarLink 
+              to="/debts" 
+              icon={<Coin className="h-5 w-5" />}
+              isActive={isActive("/debts")}
+            >
+              الديون
             </SidebarLink>
             <SidebarLink 
               to="/invoices" 
@@ -212,15 +219,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             >
               الإعدادات
             </SidebarLink>
-
-            {/* رابط الديون الجديد */}
-            <SidebarLink 
-              to="/debts" 
-              icon={<DollarSign className="h-5 w-5" />}  // أيقونة تعبر عن الدين
-              isActive={isActive("/debts")}
-            >
-              الديون
-            </SidebarLink>
           </>
         ) : (
           <>
@@ -230,6 +228,15 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 isActive("/") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
               )}>
                 <LayoutDashboard className="h-5 w-5" />
+              </Link>
+            </div>
+            {/* رابط الديون في النسخة المصغرة */}
+            <div className="py-1.5 flex justify-center">
+              <Link to="/debts" className={cn(
+                "p-2 rounded-lg transition-all duration-300",
+                isActive("/debts") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+              )}>
+                <Coin className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
@@ -350,17 +357,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <Settings className="h-5 w-5" />
               </Link>
             </div>
-
-            {/* رابط الديون الجديد في النسخة المتقابلة */}
-           {/* رابط الديون الجديد في النسخة المتقابلة */}
-            <div className="py-1.5 flex justify-center">
-              <Link to="/debts" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/debts") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
-                <DollarSign className="h-5 w-5" />
-              </Link>
-            </div>
           </>
         )}
       </div>
@@ -375,4 +371,4 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       </div>
     </div>
   );
-} 
+}
