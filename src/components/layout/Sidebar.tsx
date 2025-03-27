@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -18,7 +17,8 @@ import {
   ShoppingCart,
   Send,
   CreditCard,
-  FileCheck
+  FileCheck,
+  DollarSign  // أيقونة تعبر عن الدين
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -57,7 +57,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
   const { logout, user, hasPermission } = useAuth();
-  
+
   const isActive = (path: string) => {
     return location.pathname === path;
   };
@@ -212,6 +212,15 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             >
               الإعدادات
             </SidebarLink>
+
+            {/* رابط الديون الجديد */}
+            <SidebarLink 
+              to="/debts" 
+              icon={<DollarSign className="h-5 w-5" />}  // أيقونة تعبر عن الدين
+              isActive={isActive("/debts")}
+            >
+              الديون
+            </SidebarLink>
           </>
         ) : (
           <>
@@ -341,30 +350,29 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <Settings className="h-5 w-5" />
               </Link>
             </div>
+
+            {/* رابط الديون الجديد في النسخة المتقابلة */}
+           {/* رابط الديون الجديد في النسخة المتقابلة */}
+            <div className="py-1.5 flex justify-center">
+              <Link to="/debts" className={cn(
+                "p-2 rounded-lg transition-all duration-300",
+                isActive("/debts") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+              )}>
+                <DollarSign className="h-5 w-5" />
+              </Link>
+            </div>
           </>
         )}
       </div>
 
-      <div className="absolute bottom-4 w-full px-3">
-        {!collapsed ? (
-          <div 
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-accent/50 cursor-pointer transition-all duration-300"
-            onClick={logout}
-          >
-            <LogOut className="h-5 w-5" />
-            <span>تسجيل الخروج</span>
-          </div>
-        ) : (
-          <div 
-            className="flex justify-center"
-            onClick={logout}
-          >
-            <div className="p-2 rounded-lg text-destructive hover:bg-accent/50 cursor-pointer transition-all duration-300">
-              <LogOut className="h-5 w-5" />
-            </div>
-          </div>
-        )}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+        <button
+          onClick={logout}
+          className="flex items-center justify-center p-2 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );
-}
+} 
