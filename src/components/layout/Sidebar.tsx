@@ -18,7 +18,7 @@ import {
   Send,
   CreditCard,
   FileCheck,
-  Coin  // أيقونة تعبر عن النقود
+  DollarSign  // أيقونة تعبر عن النقود
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -107,10 +107,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             >
               لوحة التحكم
             </SidebarLink>
-            {/* صفحة الديون - تظهر مباشرة بعد لوحة التحكم */}
+            {/* الديون تظهر مباشرة تحت لوحة التحكم */}
             <SidebarLink 
               to="/debts" 
-              icon={<Coin className="h-5 w-5" />}
+              icon={<DollarSign className="h-5 w-5" />}
               isActive={isActive("/debts")}
             >
               الديون
@@ -223,138 +223,232 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         ) : (
           <>
             <div className="py-1.5 flex justify-center">
-              <Link to="/" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <LayoutDashboard className="h-5 w-5" />
               </Link>
             </div>
-            {/* رابط الديون في النسخة المصغرة */}
+            {/* في النسخة المصغرة، رابط الديون تحت لوحة التحكم مباشرة */}
             <div className="py-1.5 flex justify-center">
-              <Link to="/debts" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/debts") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
-                <Coin className="h-5 w-5" />
+              <Link 
+                to="/debts" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/debts") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
+                <DollarSign className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/invoices" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/invoices") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/invoices" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/invoices") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Receipt className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/bonds" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/bonds") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/bonds" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/bonds") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <FileCheck className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/transactions" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/transactions") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/transactions" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/transactions") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Wallet className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/accounts" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/accounts") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/accounts" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/accounts") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <CreditCard className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/gaza-telecom" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/gaza-telecom") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/gaza-telecom" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/gaza-telecom") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Send className="h-5 w-5" />
               </Link>
             </div>
             {canViewSuppliers && (
               <div className="py-1.5 flex justify-center">
-                <Link to="/suppliers" className={cn(
-                  "p-2 rounded-lg transition-all duration-300",
-                  isActive("/suppliers") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-                )}>
+                <Link 
+                  to="/suppliers" 
+                  className={cn(
+                    "p-2 rounded-lg transition-all duration-300",
+                    isActive("/suppliers") 
+                      ? "bg-sidebar-accent text-sidebar-foreground" 
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                  )}
+                >
                   <Truck className="h-5 w-5" />
                 </Link>
               </div>
             )}
             {canViewPurchases && (
               <div className="py-1.5 flex justify-center">
-                <Link to="/purchases" className={cn(
-                  "p-2 rounded-lg transition-all duration-300",
-                  isActive("/purchases") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-                )}>
+                <Link 
+                  to="/purchases" 
+                  className={cn(
+                    "p-2 rounded-lg transition-all duration-300",
+                    isActive("/purchases") 
+                      ? "bg-sidebar-accent text-sidebar-foreground" 
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                  )}
+                >
                   <ShoppingCart className="h-5 w-5" />
                 </Link>
               </div>
             )}
             <div className="py-1.5 flex justify-center">
-              <Link to="/reports" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/reports") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/reports" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/reports") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <BarChart4 className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/documents" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/documents") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/documents" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/documents") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <FileText className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/clients" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/clients") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/clients" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/clients") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Users className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/products" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/products") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/products" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/products") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Package className="h-5 w-5" />
               </Link>
             </div>
             {isAdmin && (
               <div className="py-1.5 flex justify-center">
-                <Link to="/users" className={cn(
-                  "p-2 rounded-lg transition-all duration-300",
-                  isActive("/users") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-                )}>
+                <Link 
+                  to="/users" 
+                  className={cn(
+                    "p-2 rounded-lg transition-all duration-300",
+                    isActive("/users") 
+                      ? "bg-sidebar-accent text-sidebar-foreground" 
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                  )}
+                >
                   <UserCog className="h-5 w-5" />
                 </Link>
               </div>
             )}
             <div className="py-1.5 flex justify-center">
-              <Link to="/profile" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/profile") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/profile" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/profile") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Users className="h-5 w-5" />
               </Link>
             </div>
             <div className="py-1.5 flex justify-center">
-              <Link to="/settings" className={cn(
-                "p-2 rounded-lg transition-all duration-300",
-                isActive("/settings") ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
-              )}>
+              <Link 
+                to="/settings" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/settings") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
                 <Settings className="h-5 w-5" />
+              </Link>
+            </div>
+            {/* رابط الديون في النسخة المصغرة تم وضعه هنا أيضاً */}
+            <div className="py-1.5 flex justify-center">
+              <Link 
+                to="/debts" 
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive("/debts") 
+                    ? "bg-sidebar-accent text-sidebar-foreground" 
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                )}
+              >
+                <DollarSign className="h-5 w-5" />
               </Link>
             </div>
           </>
