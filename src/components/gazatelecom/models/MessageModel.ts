@@ -1,9 +1,9 @@
 
-// نماذج البيانات المستخدمة في تطبيق غزة تليكوم
-
 export type AccountType = 'main' | 'brina';
 export type MessageType = 'incoming' | 'outgoing';
+export type TransactionType = 'withdraw' | 'deposit' | 'transfer';
 
+// نموذج الرسالة
 export interface Message {
   id: string;
   accountType: AccountType;
@@ -13,86 +13,81 @@ export interface Message {
   interest: number;
   note?: string;
   timestamp: string;
-  retracted?: boolean;
-  retractionDate?: string;
-  transferId?: string; // معرف التحويل المرتبط بالرسالة إن وجد
 }
 
+// نموذج الرصيد اليومي
 export interface DailyBalance {
   date: string;
   amount: number;
 }
 
+// ملخص الحساب
 export interface AccountSummary {
-  outgoingTotal: number;
-  outgoingInterestTotal: number;
-  outgoingCount: number;
   incomingTotal: number;
-  incomingInterestTotal: number;
+  outgoingTotal: number;
   incomingCount: number;
+  outgoingCount: number;
+  incomingInterestTotal: number;
+  outgoingInterestTotal: number;
 }
 
-// نموذج التحويل بين الحسابات
-export interface Transfer {
+// نموذج معاملة الحساب
+export interface AccountTransaction {
   id: string;
-  fromAccount: AccountType;
-  toAccount: AccountType;
+  accountId: string;
+  transactionType: TransactionType;
   amount: number;
+  description: string;
   timestamp: string;
-  notes?: string;
-  retracted?: boolean;
-  retractionDate?: string;
+  toAccountId?: string; // في حالة التحويل
+  reference?: string; // مرجع للمعاملة
+}
+
+// نموذج الحساب المالي
+export interface Account {
+  id: string;
+  name: string;
+  balance: number;
+  type: string; // نقدي، بنكي، إلخ
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // نموذج الدين
 export interface Debt {
   id: string;
   entityId: string; // معرف العميل أو المورد
-  entityType: 'client' | 'supplier'; // نوع الكيان (عميل أو مورد)
   entityName: string; // اسم العميل أو المورد
-  amount: number; // المبلغ
+  entityType: 'client' | 'supplier'; // نوع الكيان: عميل أو مورد
+  amount: number; // قيمة الدين
   remainingAmount: number; // المبلغ المتبقي
   dueDate: string; // تاريخ الاستحقاق
-  creationDate: string; // تاريخ الإنشاء
-  referenceId: string; // معرف المرجع (مثل رقم الفاتورة)
-  referenceType: 'invoice' | 'purchase' | 'other'; // نوع المرجع
-  status: 'active' | 'partial' | 'paid'; // حالة الدين
-  lastPaymentDate?: string; // تاريخ آخر دفعة
-  notes?: string; // ملاحظات
+  description: string; // وصف الدين
+  reference?: string; // رقم مرجعي (مثل رقم الفاتورة)
+  createdAt: string; // تاريخ إنشاء الدين
+  status: 'active' | 'partial' | 'paid'; // حالة الدين: نشط، مدفوع جزئيا، مدفوع بالكامل
 }
 
-// نموذج عمليات الحساب (سحب، إيداع، تحويل)
-export interface AccountTransaction {
-  id: string;
-  accountId: string;
-  accountName: string;
-  transactionType: 'withdrawal' | 'deposit' | 'transfer';
-  amount: number;
-  date: string;
-  notes?: string;
-  reference?: string;
-  status: 'completed' | 'pending' | 'failed';
-  relatedAccountId?: string; // في حالة التحويل
-  relatedAccountName?: string; // في حالة التحويل
-}
-
-// إضافة واجهة لعمليات الدين
+// نموذج دفعة الدين
 export interface DebtPayment {
   id: string;
-  debtId: string;
-  amount: number;
-  date: string;
-  notes?: string;
+  debtId: string; // معرف الدين المرتبط
+  amount: number; // مبلغ الدفعة
+  paymentDate: string; // تاريخ الدفعة
+  method: string; // طريقة الدفع
+  reference?: string; // رقم مرجعي
+  note?: string; // ملاحظة
 }
 
-// لتتبع سجل المعاملات على مستوى الكيان (العميل/المورد)
+// نموذج معاملة الكيان (العميل/المورد)
 export interface EntityTransaction {
   id: string;
-  entityId: string;
-  entityType: 'client' | 'supplier';
-  transactionType: 'payment' | 'invoice' | 'purchase' | 'refund';
-  amount: number;
-  date: string;
-  referenceId: string;
-  notes?: string;
+  entityId: string; // معرف العميل أو المورد
+  entityType: 'client' | 'supplier'; // نوع الكيان
+  type: 'debit' | 'credit'; // مدين أو دائن
+  amount: number; // قيمة المعاملة
+  description: string; // وصف المعاملة
+  reference?: string; // رقم مرجعي
+  timestamp: string; // وقت المعاملة
 }
