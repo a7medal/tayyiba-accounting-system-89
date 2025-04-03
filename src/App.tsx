@@ -13,6 +13,7 @@ import GazaTelecom from '@/pages/GazaTelecom';
 import Accounts from '@/pages/Accounts';
 import Debts from '@/pages/Debts';
 import Purchases from '@/pages/Purchases';
+import Clients from '@/pages/Clients';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/clients" element={<Clients />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/reports" element={<Reports />} />

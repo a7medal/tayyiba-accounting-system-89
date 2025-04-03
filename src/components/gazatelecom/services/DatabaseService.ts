@@ -1,187 +1,242 @@
 
-import { Message, DailyBalance, AccountTransaction, Account } from '../models/MessageModel';
+import { LocalStorageService } from './LocalStorageService';
+import { SQLiteService } from './SQLiteService';
+import { Message } from '../models/MessageModel';
 
-class GazaTelemDatabaseService {
-  private LOCAL_STORAGE_MESSAGES = 'gazaTelecom_messages';
-  private LOCAL_STORAGE_BALANCES = 'gazaTelecom_balances';
-  private LOCAL_STORAGE_ACCOUNTS = 'gazaTelecom_accounts';
-  private LOCAL_STORAGE_TRANSACTIONS = 'gazaTelecom_transactions';
+/**
+ * خدمة قاعدة البيانات لتطبيق غزة تلكوم
+ */
+export class DatabaseService {
+  private static instance: DatabaseService;
+  private localStorageService: LocalStorageService;
+  private sqliteService: SQLiteService;
+  private activeService: 'local' | 'sqlite' = 'local';
+  private _isConnected: boolean = false;
 
-  // وظائف الرسائل
-  async getMessages(): Promise<Message[]> {
+  /**
+   * إنشاء كائن خدمة قاعدة البيانات
+   */
+  private constructor() {
+    this.localStorageService = new LocalStorageService();
+    this.sqliteService = new SQLiteService();
+    
+    // تحقق مما إذا كان هناك نوع مخزن في التخزين المحلي
+    const savedDbType = localStorage.getItem('dbType');
+    if (savedDbType === 'sqlite') {
+      this.activeService = 'sqlite';
+    }
+    
+    // تحقق من حالة الاتصال
+    this._isConnected = this.activeService === 'local' ? true : false;
+  }
+
+  /**
+   * الحصول على نسخة واحدة من خدمة قاعدة البيانات (Singleton)
+   */
+  public static getInstance(): DatabaseService {
+    if (!DatabaseService.instance) {
+      DatabaseService.instance = new DatabaseService();
+    }
+    return DatabaseService.instance;
+  }
+
+  /**
+   * التحقق من حالة الاتصال بقاعدة البيانات
+   */
+  public isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  /**
+   * الاتصال بقاعدة البيانات
+   */
+  public async connect(): Promise<boolean> {
     try {
-      const data = localStorage.getItem(this.LOCAL_STORAGE_MESSAGES);
-      return data ? JSON.parse(data) : [];
+      if (this.activeService === 'local') {
+        this._isConnected = true;
+        return true;
+      } else {
+        const connected = await this.sqliteService.connect();
+        this._isConnected = connected;
+        return connected;
+      }
     } catch (error) {
-      console.error('خطأ في استرجاع الرسائل:', error);
-      return [];
+      console.error('خطأ في الاتصال بقاعدة البيانات:', error);
+      this._isConnected = false;
+      return false;
     }
   }
 
-  async saveMessage(message: Message): Promise<Message> {
+  /**
+   * قطع الاتصال بقاعدة البيانات
+   */
+  public disconnect(): void {
+    if (this.activeService === 'sqlite') {
+      this.sqliteService.disconnect();
+    }
+    this._isConnected = false;
+  }
+
+  /**
+   * تغيير نوع قاعدة البيانات
+   */
+  public setDatabaseType(type: 'local' | 'sqlite'): void {
+    this.activeService = type;
+    localStorage.setItem('dbType', type);
+    this._isConnected = type === 'local' ? true : false;
+  }
+
+  /**
+   * الحصول على نوع قاعدة البيانات الحالي
+   */
+  public getDatabaseType(): 'local' | 'sqlite' {
+    return this.activeService;
+  }
+
+  /**
+   * حفظ رسالة في قاعدة البيانات
+   */
+  public saveMessage(message: Message): boolean {
     try {
-      const messages = await this.getMessages();
-      messages.push(message);
-      localStorage.setItem(this.LOCAL_STORAGE_MESSAGES, JSON.stringify(messages));
-      return message;
+      if (this.activeService === 'local') {
+        return this.localStorageService.saveMessage(message);
+      } else {
+        return this.sqliteService.saveMessage(message);
+      }
     } catch (error) {
       console.error('خطأ في حفظ الرسالة:', error);
-      throw error;
+      return false;
     }
   }
 
-  async updateMessage(message: Message): Promise<Message> {
+  /**
+   * الحصول على جميع الرسائل من قاعدة البيانات
+   */
+  public getAllMessages(): Message[] {
     try {
-      const messages = await this.getMessages();
-      const index = messages.findIndex(m => m.id === message.id);
-      if (index === -1) {
-        throw new Error('الرسالة غير موجودة');
+      if (this.activeService === 'local') {
+        return this.localStorageService.getAllMessages();
+      } else {
+        return this.sqliteService.getAllMessages();
       }
-      
-      messages[index] = message;
-      localStorage.setItem(this.LOCAL_STORAGE_MESSAGES, JSON.stringify(messages));
-      return message;
     } catch (error) {
-      console.error('خطأ في تحديث الرسالة:', error);
-      throw error;
+      console.error('خطأ في جلب الرسائل:', error);
+      return [];
     }
   }
 
-  async deleteMessage(messageId: string): Promise<boolean> {
+  /**
+   * البحث عن رسائل بناءً على معايير
+   */
+  public searchMessages(criteria: any): Message[] {
     try {
-      const messages = await this.getMessages();
-      const filteredMessages = messages.filter(message => message.id !== messageId);
-      localStorage.setItem(this.LOCAL_STORAGE_MESSAGES, JSON.stringify(filteredMessages));
-      return true;
+      if (this.activeService === 'local') {
+        return this.localStorageService.searchMessages(criteria);
+      } else {
+        return this.sqliteService.searchMessages(criteria);
+      }
+    } catch (error) {
+      console.error('خطأ في البحث عن الرسائل:', error);
+      return [];
+    }
+  }
+
+  /**
+   * تحديث حالة رسالة
+   */
+  public updateMessageStatus(id: string, status: 'pending' | 'completed' | 'failed'): boolean {
+    try {
+      if (this.activeService === 'local') {
+        return this.localStorageService.updateMessageStatus(id, status);
+      } else {
+        return this.sqliteService.updateMessageStatus(id, status);
+      }
+    } catch (error) {
+      console.error('خطأ في تحديث حالة الرسالة:', error);
+      return false;
+    }
+  }
+
+  /**
+   * حذف رسالة من قاعدة البيانات
+   */
+  public deleteMessage(id: string): boolean {
+    try {
+      if (this.activeService === 'local') {
+        return this.localStorageService.deleteMessage(id);
+      } else {
+        return this.sqliteService.deleteMessage(id);
+      }
     } catch (error) {
       console.error('خطأ في حذف الرسالة:', error);
-      throw error;
+      return false;
     }
   }
 
-  // وظائف الأرصدة اليومية
-  async getDailyBalances(): Promise<DailyBalance[]> {
+  /**
+   * سحب رسالة وتحديث حالتها
+   */
+  public retractMessage(id: string): boolean {
     try {
-      const data = localStorage.getItem(this.LOCAL_STORAGE_BALANCES);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('خطأ في استرجاع الأرصدة اليومية:', error);
-      return [];
-    }
-  }
-
-  async saveDailyBalance(balance: DailyBalance): Promise<DailyBalance> {
-    try {
-      const balances = await this.getDailyBalances();
-      const index = balances.findIndex(b => b.date === balance.date);
-      
-      if (index !== -1) {
-        balances[index] = balance;
+      if (this.activeService === 'local') {
+        return this.localStorageService.retractMessage(id);
       } else {
-        balances.push(balance);
+        return this.sqliteService.retractMessage(id);
       }
-      
-      localStorage.setItem(this.LOCAL_STORAGE_BALANCES, JSON.stringify(balances));
-      return balance;
     } catch (error) {
-      console.error('خطأ في حفظ الرصيد اليومي:', error);
-      throw error;
+      console.error('خطأ في سحب الرسالة:', error);
+      return false;
     }
   }
 
-  // وظائف الحسابات
-  async getAccounts(): Promise<Account[]> {
+  /**
+   * تصدير قاعدة البيانات كملف JSON
+   */
+  public exportDatabase(): string {
     try {
-      const data = localStorage.getItem(this.LOCAL_STORAGE_ACCOUNTS);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('خطأ في استرجاع الحسابات:', error);
-      return [];
-    }
-  }
-
-  async saveAccount(account: Account): Promise<Account> {
-    try {
-      const accounts = await this.getAccounts();
-      const index = accounts.findIndex(a => a.id === account.id);
-      
-      if (index !== -1) {
-        accounts[index] = account;
+      if (this.activeService === 'local') {
+        return this.localStorageService.exportDatabase();
       } else {
-        accounts.push(account);
+        return this.sqliteService.exportDatabase();
       }
-      
-      localStorage.setItem(this.LOCAL_STORAGE_ACCOUNTS, JSON.stringify(accounts));
-      return account;
     } catch (error) {
-      console.error('خطأ في حفظ الحساب:', error);
-      throw error;
+      console.error('خطأ في تصدير قاعدة البيانات:', error);
+      return '';
     }
   }
 
-  async deleteAccount(accountId: string): Promise<boolean> {
+  /**
+   * استيراد قاعدة البيانات من ملف JSON
+   */
+  public importDatabase(data: string): boolean {
     try {
-      const accounts = await this.getAccounts();
-      const filteredAccounts = accounts.filter(account => account.id !== accountId);
-      localStorage.setItem(this.LOCAL_STORAGE_ACCOUNTS, JSON.stringify(filteredAccounts));
-      return true;
+      if (this.activeService === 'local') {
+        return this.localStorageService.importDatabase(data);
+      } else {
+        return this.sqliteService.importDatabase(data);
+      }
     } catch (error) {
-      console.error('خطأ في حذف الحساب:', error);
-      throw error;
+      console.error('خطأ في استيراد قاعدة البيانات:', error);
+      return false;
     }
   }
 
-  // وظائف معاملات الحسابات
-  async getTransactions(): Promise<AccountTransaction[]> {
+  /**
+   * إعادة تعيين قاعدة البيانات وحذف جميع البيانات
+   */
+  public resetDatabase(): boolean {
     try {
-      const data = localStorage.getItem(this.LOCAL_STORAGE_TRANSACTIONS);
-      return data ? JSON.parse(data) : [];
+      if (this.activeService === 'local') {
+        return this.localStorageService.resetDatabase();
+      } else {
+        return this.sqliteService.resetDatabase();
+      }
     } catch (error) {
-      console.error('خطأ في استرجاع المعاملات:', error);
-      return [];
-    }
-  }
-
-  async saveTransaction(transaction: AccountTransaction): Promise<AccountTransaction> {
-    try {
-      const transactions = await this.getTransactions();
-      transactions.push(transaction);
-      localStorage.setItem(this.LOCAL_STORAGE_TRANSACTIONS, JSON.stringify(transactions));
-      return transaction;
-    } catch (error) {
-      console.error('خطأ في حفظ المعاملة:', error);
-      throw error;
-    }
-  }
-
-  async getTransactionsByDate(startDate: string, endDate: string): Promise<AccountTransaction[]> {
-    try {
-      const transactions = await this.getTransactions();
-      return transactions.filter(transaction => {
-        const transDate = new Date(transaction.timestamp);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        
-        return transDate >= start && transDate <= end;
-      });
-    } catch (error) {
-      console.error('خطأ في استرجاع المعاملات حسب التاريخ:', error);
-      return [];
-    }
-  }
-
-  async getTransactionsByAccount(accountId: string): Promise<AccountTransaction[]> {
-    try {
-      const transactions = await this.getTransactions();
-      return transactions.filter(transaction => 
-        transaction.accountId === accountId || transaction.toAccountId === accountId
-      );
-    } catch (error) {
-      console.error('خطأ في استرجاع معاملات الحساب:', error);
-      return [];
+      console.error('خطأ في إعادة تعيين قاعدة البيانات:', error);
+      return false;
     }
   }
 }
 
-export const DatabaseService = new GazaTelemDatabaseService();
+// تصدير نسخة واحدة من خدمة قاعدة البيانات
+export const DatabaseService_Instance = DatabaseService.getInstance();
