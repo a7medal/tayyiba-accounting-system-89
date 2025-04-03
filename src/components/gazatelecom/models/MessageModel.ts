@@ -1,40 +1,27 @@
 
 export type AccountType = 'main' | 'brina';
-export type MessageType = 'outgoing' | 'incoming';
-export type TransactionType = 'deposit' | 'withdrawal' | 'transfer';
+export type MessageType = 'incoming' | 'outgoing';
+export type TransactionType = 'withdraw' | 'deposit' | 'transfer';
 
+// نموذج الرسالة
 export interface Message {
   id: string;
-  messageNumber: string;
-  phone: string;
-  amount: number;
-  date: string;
-  messageType: MessageType;
-  status: 'pending' | 'completed' | 'failed';
-  note?: string;
-  retracted?: boolean;
-  retractionDate?: string;
-  
-  // Adding properties that are being used in the components
-  timestamp: string;
   accountType: AccountType;
+  messageType: MessageType;
   serialNumber: string;
+  amount: number;
   interest: number;
+  note?: string;
+  timestamp: string;
 }
 
-export interface MessageFilter {
-  startDate?: string;
-  endDate?: string;
-  type?: string;
-  status?: string;
-  searchText?: string;
-}
-
+// نموذج الرصيد اليومي
 export interface DailyBalance {
   date: string;
   amount: number;
 }
 
+// ملخص الحساب
 export interface AccountSummary {
   incomingTotal: number;
   outgoingTotal: number;
@@ -44,98 +31,63 @@ export interface AccountSummary {
   outgoingInterestTotal: number;
 }
 
+// نموذج معاملة الحساب
+export interface AccountTransaction {
+  id: string;
+  accountId: string;
+  transactionType: TransactionType;
+  amount: number;
+  description: string;
+  timestamp: string;
+  toAccountId?: string; // في حالة التحويل
+  reference?: string; // مرجع للمعاملة
+}
+
+// نموذج الحساب المالي
 export interface Account {
   id: string;
   name: string;
   balance: number;
-  type?: string;
+  type: string; // نقدي، بنكي، إلخ
   description?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AccountTransaction {
-  id: string;
-  accountId: string;
-  amount: number;
-  type: TransactionType;
-  description?: string;
-  transactionType?: string;
-  toAccountId?: string;
-  reference?: string;
-  timestamp?: string;
-  createdAt: string;
-}
-
+// نموذج الدين
 export interface Debt {
   id: string;
-  entityId: string;
-  entityType: 'client' | 'supplier';
-  entityName?: string;
-  amount: number;
-  remainingAmount: number;
-  description: string;
-  reference?: string;
-  status?: string;
-  createdAt: string;
-  dueDate?: string;
+  entityId: string; // معرف العميل أو المورد
+  entityName: string; // اسم العميل أو المورد
+  entityType: 'client' | 'supplier'; // نوع الكيان: عميل أو مورد
+  amount: number; // قيمة الدين
+  remainingAmount: number; // المبلغ المتبقي
+  dueDate: string; // تاريخ الاستحقاق
+  description: string; // وصف الدين
+  reference?: string; // رقم مرجعي (مثل رقم الفاتورة)
+  createdAt: string; // تاريخ إنشاء الدين
+  status: 'active' | 'partial' | 'paid'; // حالة الدين: نشط، مدفوع جزئيا، مدفوع بالكامل
 }
 
+// نموذج دفعة الدين
 export interface DebtPayment {
   id: string;
-  debtId: string;
-  amount: number;
-  date: string;
-  paymentDate?: string;
-  method?: string;
-  reference?: string;
-  note?: string;
-  notes?: string;
+  debtId: string; // معرف الدين المرتبط
+  amount: number; // مبلغ الدفعة
+  paymentDate: string; // تاريخ الدفعة
+  method: string; // طريقة الدفع
+  reference?: string; // رقم مرجعي
+  note?: string; // ملاحظة
 }
 
+// نموذج معاملة الكيان (العميل/المورد)
 export interface EntityTransaction {
   id: string;
-  entityId: string;
-  entityType: 'client' | 'supplier';
-  amount: number;
-  type: 'credit' | 'debit';
-  description: string;
-  date: string;
+  entityId: string; // معرف العميل أو المورد
+  entityType: 'client' | 'supplier'; // نوع الكيان
+  type: 'debit' | 'credit'; // مدين أو دائن
+  amount: number; // قيمة المعاملة
+  description: string; // وصف المعاملة
+  reference?: string; // رقم مرجعي
+  timestamp: string; // وقت المعاملة
 }
-
-export const createNewMessage = (data: Partial<Message>): Message => {
-  return {
-    id: data.id || crypto.randomUUID(),
-    messageNumber: data.messageNumber || generateMessageNumber(),
-    phone: data.phone || '',
-    amount: data.amount || 0,
-    date: data.date || new Date().toISOString(),
-    messageType: data.messageType || 'outgoing',
-    status: data.status || 'pending',
-    note: data.note,
-    retracted: data.retracted || false,
-    retractionDate: data.retractionDate,
-    
-    // Adding the new required properties
-    timestamp: data.timestamp || new Date().toISOString(),
-    accountType: data.accountType || 'main',
-    serialNumber: data.serialNumber || generateSerialNumber(),
-    interest: data.interest || 0
-  };
-};
-
-const generateMessageNumber = (): string => {
-  const date = new Date();
-  const year = date.getFullYear().toString().slice(2);
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  
-  return `MSG-${year}${month}${day}-${random}`;
-};
-
-const generateSerialNumber = (): string => {
-  const date = new Date();
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `SN-${date.getFullYear()}${random}`;
-};

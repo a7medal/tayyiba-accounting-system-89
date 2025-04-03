@@ -1,98 +1,187 @@
 
-import { 
-  Message, 
-  DailyBalance, 
-  Account, 
-  AccountTransaction,
-  Debt, 
-  DebtPayment, 
-  EntityTransaction 
-} from '../models/MessageModel';
-import { LocalStorageService } from './LocalStorageService';
+import { Message, DailyBalance, AccountTransaction, Account } from '../models/MessageModel';
 
-export class DatabaseService {
-  private static connected = false;
+class GazaTelemDatabaseService {
+  private LOCAL_STORAGE_MESSAGES = 'gazaTelecom_messages';
+  private LOCAL_STORAGE_BALANCES = 'gazaTelecom_balances';
+  private LOCAL_STORAGE_ACCOUNTS = 'gazaTelecom_accounts';
+  private LOCAL_STORAGE_TRANSACTIONS = 'gazaTelecom_transactions';
 
-  static isConnected(): boolean {
-    return this.connected || localStorage.getItem('dbConnectionState') === 'connected';
+  // وظائف الرسائل
+  async getMessages(): Promise<Message[]> {
+    try {
+      const data = localStorage.getItem(this.LOCAL_STORAGE_MESSAGES);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('خطأ في استرجاع الرسائل:', error);
+      return [];
+    }
   }
 
-  static async connect(): Promise<boolean> {
+  async saveMessage(message: Message): Promise<Message> {
     try {
-      // Simulating database connection
-      this.connected = true;
-      localStorage.setItem('dbConnectionState', 'connected');
+      const messages = await this.getMessages();
+      messages.push(message);
+      localStorage.setItem(this.LOCAL_STORAGE_MESSAGES, JSON.stringify(messages));
+      return message;
+    } catch (error) {
+      console.error('خطأ في حفظ الرسالة:', error);
+      throw error;
+    }
+  }
+
+  async updateMessage(message: Message): Promise<Message> {
+    try {
+      const messages = await this.getMessages();
+      const index = messages.findIndex(m => m.id === message.id);
+      if (index === -1) {
+        throw new Error('الرسالة غير موجودة');
+      }
+      
+      messages[index] = message;
+      localStorage.setItem(this.LOCAL_STORAGE_MESSAGES, JSON.stringify(messages));
+      return message;
+    } catch (error) {
+      console.error('خطأ في تحديث الرسالة:', error);
+      throw error;
+    }
+  }
+
+  async deleteMessage(messageId: string): Promise<boolean> {
+    try {
+      const messages = await this.getMessages();
+      const filteredMessages = messages.filter(message => message.id !== messageId);
+      localStorage.setItem(this.LOCAL_STORAGE_MESSAGES, JSON.stringify(filteredMessages));
       return true;
     } catch (error) {
-      console.error('فشل الاتصال بقاعدة البيانات:', error);
-      this.connected = false;
-      localStorage.setItem('dbConnectionState', 'disconnected');
-      return false;
+      console.error('خطأ في حذف الرسالة:', error);
+      throw error;
     }
   }
 
-  static disconnect(): void {
-    this.connected = false;
-    localStorage.setItem('dbConnectionState', 'disconnected');
-  }
-
-  // Message operations
-  static async getMessages(): Promise<Message[]> {
-    // For now, we'll use LocalStorageService as our database
-    return LocalStorageService.getMessages();
-  }
-
-  static async saveMessage(message: Message): Promise<Message> {
-    return LocalStorageService.saveMessage(message);
-  }
-
-  static async updateMessage(message: Message): Promise<Message> {
-    return LocalStorageService.saveMessage(message);
-  }
-
-  static async deleteMessage(messageId: string): Promise<boolean> {
-    return LocalStorageService.deleteMessage(messageId);
-  }
-
-  // Daily balance operations
-  static async getDailyBalances(): Promise<DailyBalance[]> {
-    return LocalStorageService.getBalanceHistory();
-  }
-
-  static async saveDailyBalance(balance: DailyBalance): Promise<DailyBalance> {
-    return LocalStorageService.saveDailyBalance(balance);
-  }
-
-  // Account operations 
-  static async getAccounts(): Promise<Account[]> {
-    const accounts = localStorage.getItem('app_accounts');
-    return accounts ? JSON.parse(accounts) : [];
-  }
-
-  static async saveAccount(account: Account): Promise<Account> {
-    const accounts = await this.getAccounts();
-    const existingIndex = accounts.findIndex(a => a.id === account.id);
-    
-    if (existingIndex !== -1) {
-      accounts[existingIndex] = account;
-    } else {
-      accounts.push(account);
+  // وظائف الأرصدة اليومية
+  async getDailyBalances(): Promise<DailyBalance[]> {
+    try {
+      const data = localStorage.getItem(this.LOCAL_STORAGE_BALANCES);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('خطأ في استرجاع الأرصدة اليومية:', error);
+      return [];
     }
-    
-    localStorage.setItem('app_accounts', JSON.stringify(accounts));
-    return account;
   }
 
-  // Transaction operations
-  static async getTransactions(): Promise<AccountTransaction[]> {
-    const transactions = localStorage.getItem('app_transactions');
-    return transactions ? JSON.parse(transactions) : [];
+  async saveDailyBalance(balance: DailyBalance): Promise<DailyBalance> {
+    try {
+      const balances = await this.getDailyBalances();
+      const index = balances.findIndex(b => b.date === balance.date);
+      
+      if (index !== -1) {
+        balances[index] = balance;
+      } else {
+        balances.push(balance);
+      }
+      
+      localStorage.setItem(this.LOCAL_STORAGE_BALANCES, JSON.stringify(balances));
+      return balance;
+    } catch (error) {
+      console.error('خطأ في حفظ الرصيد اليومي:', error);
+      throw error;
+    }
   }
 
-  static async saveTransaction(transaction: AccountTransaction): Promise<AccountTransaction> {
-    const transactions = await this.getTransactions();
-    transactions.push(transaction);
-    localStorage.setItem('app_transactions', JSON.stringify(transactions));
-    return transaction;
+  // وظائف الحسابات
+  async getAccounts(): Promise<Account[]> {
+    try {
+      const data = localStorage.getItem(this.LOCAL_STORAGE_ACCOUNTS);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('خطأ في استرجاع الحسابات:', error);
+      return [];
+    }
+  }
+
+  async saveAccount(account: Account): Promise<Account> {
+    try {
+      const accounts = await this.getAccounts();
+      const index = accounts.findIndex(a => a.id === account.id);
+      
+      if (index !== -1) {
+        accounts[index] = account;
+      } else {
+        accounts.push(account);
+      }
+      
+      localStorage.setItem(this.LOCAL_STORAGE_ACCOUNTS, JSON.stringify(accounts));
+      return account;
+    } catch (error) {
+      console.error('خطأ في حفظ الحساب:', error);
+      throw error;
+    }
+  }
+
+  async deleteAccount(accountId: string): Promise<boolean> {
+    try {
+      const accounts = await this.getAccounts();
+      const filteredAccounts = accounts.filter(account => account.id !== accountId);
+      localStorage.setItem(this.LOCAL_STORAGE_ACCOUNTS, JSON.stringify(filteredAccounts));
+      return true;
+    } catch (error) {
+      console.error('خطأ في حذف الحساب:', error);
+      throw error;
+    }
+  }
+
+  // وظائف معاملات الحسابات
+  async getTransactions(): Promise<AccountTransaction[]> {
+    try {
+      const data = localStorage.getItem(this.LOCAL_STORAGE_TRANSACTIONS);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('خطأ في استرجاع المعاملات:', error);
+      return [];
+    }
+  }
+
+  async saveTransaction(transaction: AccountTransaction): Promise<AccountTransaction> {
+    try {
+      const transactions = await this.getTransactions();
+      transactions.push(transaction);
+      localStorage.setItem(this.LOCAL_STORAGE_TRANSACTIONS, JSON.stringify(transactions));
+      return transaction;
+    } catch (error) {
+      console.error('خطأ في حفظ المعاملة:', error);
+      throw error;
+    }
+  }
+
+  async getTransactionsByDate(startDate: string, endDate: string): Promise<AccountTransaction[]> {
+    try {
+      const transactions = await this.getTransactions();
+      return transactions.filter(transaction => {
+        const transDate = new Date(transaction.timestamp);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
+        return transDate >= start && transDate <= end;
+      });
+    } catch (error) {
+      console.error('خطأ في استرجاع المعاملات حسب التاريخ:', error);
+      return [];
+    }
+  }
+
+  async getTransactionsByAccount(accountId: string): Promise<AccountTransaction[]> {
+    try {
+      const transactions = await this.getTransactions();
+      return transactions.filter(transaction => 
+        transaction.accountId === accountId || transaction.toAccountId === accountId
+      );
+    } catch (error) {
+      console.error('خطأ في استرجاع معاملات الحساب:', error);
+      return [];
+    }
   }
 }
+
+export const DatabaseService = new GazaTelemDatabaseService();
