@@ -55,7 +55,7 @@ export default function Login() {
       <div className="w-full max-w-md p-8 space-y-8 card-glass rounded-2xl">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <img src="61739e53-4aa6-418e-82ac-bacdebef5918.png" alt="شعار طيبة" className="h-32" />
+            <img src="/lovable-uploads/61739e53-4aa6-418e-82ac-bacdebef5918.png" alt="شعار طيبة" className="h-32" />
           </div>
           <p className="mt-2 text-muted-foreground">نظام المحاسبة المتكامل</p>
         </div>

@@ -1,6 +1,6 @@
 
 import { DebtService } from './DebtService';
-import { Debt, DebtPayment, EntityTransaction } from '@/components/gazatelecom/models/MessageModel';
+import { Debt } from '@/components/gazatelecom/models/MessageModel';
 
 // واجهة خدمة قاعدة البيانات للتطبيق
 export interface AppDatabaseService {
@@ -12,14 +12,6 @@ export interface AppDatabaseService {
   getDebts(): Promise<Debt[]>;
   saveDebt(debt: Debt): Promise<Debt>;
   deleteDebt(debtId: string): Promise<boolean>;
-  
-  // وظائف المشتريات - أضفناها لإصلاح الأخطاء
-  getPurchases(): Promise<any[]>;
-  deletePurchase(id: string): Promise<boolean>;
-  
-  // وظائف إضافية للخدمات
-  setDbType?(type: string): void;
-  exportDatabase?(): Promise<string>;
 }
 
 class DatabaseService implements AppDatabaseService {
@@ -68,59 +60,6 @@ class DatabaseService implements AppDatabaseService {
       throw new Error('قاعدة البيانات غير متصلة');
     }
     return DebtService.deleteDebt(debtId);
-  }
-  
-  // وظائف المشتريات (مؤقتة لإصلاح الأخطاء)
-  async getPurchases(): Promise<any[]> {
-    if (!this.isConnected()) {
-      throw new Error('قاعدة البيانات غير متصلة');
-    }
-    // استخدام التخزين المحلي مؤقتًا
-    const purchasesData = localStorage.getItem('app_purchases');
-    return purchasesData ? JSON.parse(purchasesData) : [];
-  }
-  
-  async deletePurchase(id: string): Promise<boolean> {
-    if (!this.isConnected()) {
-      throw new Error('قاعدة البيانات غير متصلة');
-    }
-    try {
-      const purchases = await this.getPurchases();
-      const filteredPurchases = purchases.filter(p => p.id !== id);
-      localStorage.setItem('app_purchases', JSON.stringify(filteredPurchases));
-      return true;
-    } catch (error) {
-      console.error('خطأ في حذف المشتريات:', error);
-      return false;
-    }
-  }
-  
-  // وظائف إضافية للإعدادات
-  setDbType(type: string): void {
-    localStorage.setItem('dbType', type);
-  }
-  
-  async exportDatabase(): Promise<string> {
-    if (!this.isConnected()) {
-      throw new Error('قاعدة البيانات غير متصلة');
-    }
-    
-    // جمع جميع البيانات من التخزين المحلي
-    const allData: Record<string, any> = {};
-    
-    // تجميع جميع مفاتيح التخزين المحلي التي تبدأ بـ 'app_'
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('app_')) {
-        try {
-          allData[key] = JSON.parse(localStorage.getItem(key) || '');
-        } catch (e) {
-          allData[key] = localStorage.getItem(key);
-        }
-      }
-    }
-    
-    return JSON.stringify(allData, null, 2);
   }
 }
 

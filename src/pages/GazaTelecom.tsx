@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -123,7 +122,6 @@ const GazaTelecom = () => {
   const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
 
-  // عند تحميل الصفحة، حاول الاتصال بقاعدة البيانات
   useEffect(() => {
     const connectToDatabase = async () => {
       try {
@@ -146,20 +144,6 @@ const GazaTelecom = () => {
     
     connectToDatabase();
   }, [toast]);
-
-  // حفظ التبويب النشط في التخزين المحلي لاستعادته عند إعادة تحميل الصفحة
-  useEffect(() => {
-    // حفظ التبويب النشط في التخزين المحلي
-    localStorage.setItem('gazaTelecomActiveTab', activeTab);
-  }, [activeTab]);
-
-  // استعادة التبويب النشط من التخزين المحلي عند تحميل الصفحة
-  useEffect(() => {
-    const savedTab = localStorage.getItem('gazaTelecomActiveTab');
-    if (savedTab) {
-      setActiveTab(savedTab);
-    }
-  }, []);
 
   const handlePrint = () => {
     window.print();

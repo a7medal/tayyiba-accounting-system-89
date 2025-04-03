@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileSearch, Download, Edit, Printer, ArrowLeft, Phone, Globe, MapPin } from 'lucide-react';
+import { PlusCircle, FileSearch, Download, Edit, Printer, ArrowLeft } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
+// بيانات الفواتير النموذجية
 const dummyInvoices = [
   { 
     id: 1, 
@@ -89,23 +91,8 @@ interface InvoiceFormData {
   items: { description: string; quantity: number; price: number }[];
 }
 
-const getInitialInvoices = () => {
-  if (typeof window === 'undefined') return dummyInvoices;
-  
-  const savedInvoices = localStorage.getItem('invoices');
-  if (savedInvoices) {
-    try {
-      return JSON.parse(savedInvoices);
-    } catch (error) {
-      console.error('خطأ في تحليل بيانات الفواتير:', error);
-      return dummyInvoices;
-    }
-  }
-  return dummyInvoices;
-};
-
 export default function Invoices() {
-  const [invoices, setInvoices] = useState(getInitialInvoices);
+  const [invoices, setInvoices] = useState(dummyInvoices);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState<null | any>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -116,12 +103,6 @@ export default function Invoices() {
     items: [{ description: '', quantity: 1, price: 0 }]
   });
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('invoices', JSON.stringify(invoices));
-    }
-  }, [invoices]);
 
   const filteredInvoices = activeTab === 'all' 
     ? invoices 
@@ -142,7 +123,7 @@ export default function Invoices() {
 
   const handleAddInvoice = () => {
     const newInvoice = {
-      id: Date.now(),
+      id: invoices.length + 1,
       number: `INV-${new Date().getFullYear()}-${(invoices.length + 1).toString().padStart(3, '0')}`,
       client: newInvoiceData.client,
       date: new Date().toISOString().split('T')[0],
@@ -151,15 +132,15 @@ export default function Invoices() {
       status: 'pending',
       items: newInvoiceData.items
     };
-
-    setInvoices(prev => [...prev, newInvoice]);
+    
+    setInvoices([...invoices, newInvoice]);
     setNewInvoiceData({
       client: '',
       amount: 0,
       dueDate: new Date().toISOString().split('T')[0],
       items: [{ description: '', quantity: 1, price: 0 }]
     });
-
+    
     toast({
       title: "تمت الإضافة",
       description: "تمت إضافة الفاتورة الجديدة بنجاح",
@@ -223,7 +204,7 @@ export default function Invoices() {
         return status;
     }
   };
-
+  
   return (
     <div className="animate-fade-in">
       {!showDetails ? (
@@ -264,7 +245,7 @@ export default function Invoices() {
                         onChange={(e) => setNewInvoiceData({...newInvoiceData, dueDate: e.target.value})}
                       />
                     </div>
-
+                    
                     <div className="pt-4 border-t">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="font-medium">البنود</h3>
@@ -277,7 +258,7 @@ export default function Invoices() {
                           إضافة بند
                         </Button>
                       </div>
-
+                      
                       <div className="space-y-4">
                         {newInvoiceData.items.map((item, index) => (
                           <div key={index} className="grid grid-cols-12 gap-2 items-end">
@@ -327,7 +308,7 @@ export default function Invoices() {
                       </div>
                     </div>
                   </div>
-
+                  
                   <div className="border-t pt-4">
                     <div className="flex justify-between">
                       <span className="font-medium">المجموع:</span>
@@ -336,7 +317,7 @@ export default function Invoices() {
                       </span>
                     </div>
                   </div>
-
+                  
                   <div className="flex justify-end">
                     <Button onClick={handleAddInvoice}>إضافة الفاتورة</Button>
                   </div>
@@ -356,7 +337,7 @@ export default function Invoices() {
                   <TabsTrigger value="overdue">متأخرة</TabsTrigger>
                 </TabsList>
               </div>
-
+              
               <TabsContent value={activeTab} className="m-0">
                 <Table>
                   <TableHeader>
@@ -447,58 +428,42 @@ export default function Invoices() {
                 </Button>
               </div>
             </div>
-
+            
             <div className="mb-8 border-b pb-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src="/logo.png" 
-                    alt="شعار الشركة"
-                    className="w-16 h-16 object-contain"
-                  />
-                  <div>
-                    <h1 className="text-2xl font-bold text-primary">طيبة المدينة تلكوم</h1>
-                    <p className="text-sm text-muted-foreground">
-                      نواكشوط، موريتانيا
-                    </p>
-                  </div>
+              <div className="flex justify-center items-center gap-2 mb-2">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary-foreground">ط</span>
                 </div>
-
-                <div className="bg-primary/10 p-4 rounded-lg">
-                  <h2 className="text-3xl font-bold text-primary text-center">فاتورة ضريبية</h2>
-                  <p className="text-center text-sm mt-1">رقم السجل الضريبي: 123456789</p>
-                </div>
+                <h1 className="text-2xl font-bold">طيبة المدينة تلكوم</h1>
               </div>
-                  <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>نواكشوط، موريتانيا</span>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                نواكشوط، موريتانيا | هاتف: 22371138 / 41101138 | البريد الإلكتروني: taybaelmedintelecom@gmail.com
+              </p>
             </div>
 
             <div className="border-b border-border pb-6 mb-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">العميل</h3>
-                  <p className="text-lg font-medium">{selectedInvoice?.client}</p>
+                  <h3 className="text-lg font-medium mb-2">معلومات العميل</h3>
+                  <p className="font-medium text-lg">{selectedInvoice?.client}</p>
                   <p className="text-muted-foreground">العنوان: نواكشوط، موريتانيا</p>
+                  <p className="text-muted-foreground">رقم الهاتف: 123456789</p>
                 </div>
-                
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">رقم الفاتورة:</span>
-                    <span className="font-medium">{selectedInvoice?.number}</span>
+                    <h3 className="text-sm font-medium text-muted-foreground">رقم الفاتورة:</h3>
+                    <p className="font-medium">{selectedInvoice?.number}</p>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">تاريخ الإصدار:</span>
-                    <span>{new Date(selectedInvoice?.date).toLocaleDateString('ar-SA')}</span>
+                    <h3 className="text-sm font-medium text-muted-foreground">تاريخ الإصدار:</h3>
+                    <p>{new Date(selectedInvoice?.date).toLocaleDateString('ar-SA')}</p>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">تاريخ الاستحقاق:</span>
-                    <span>{new Date(selectedInvoice?.dueDate).toLocaleDateString('ar-SA')}</span>
+                    <h3 className="text-sm font-medium text-muted-foreground">تاريخ الاستحقاق:</h3>
+                    <p>{new Date(selectedInvoice?.dueDate).toLocaleDateString('ar-SA')}</p>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">الحالة:</span>
+                    <h3 className="text-sm font-medium text-muted-foreground">الحالة:</h3>
                     <span className={cn(
                       "px-2 py-0.5 rounded-full text-xs font-medium",
                       getStatusBadgeClass(selectedInvoice?.status)
@@ -509,12 +474,12 @@ export default function Invoices() {
                 </div>
               </div>
             </div>
-
+            
             <div className="border rounded-lg overflow-hidden mb-6">
               <Table>
-                <TableHeader className="bg-accent/50">
+                <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50%]">الوصف</TableHead>
+                    <TableHead>الوصف</TableHead>
                     <TableHead className="text-center">الكمية</TableHead>
                     <TableHead className="text-center">السعر</TableHead>
                     <TableHead className="text-center">الإجمالي</TableHead>
@@ -532,7 +497,7 @@ export default function Invoices() {
                 </TableBody>
               </Table>
             </div>
-
+            
             <div className="flex justify-end">
               <div className="w-72 space-y-2">
                 <div className="flex justify-between">
@@ -549,12 +514,9 @@ export default function Invoices() {
                 </div>
               </div>
             </div>
-
+            
             <div className="mt-10 pt-6 border-t border-border text-center">
               <p className="text-sm text-muted-foreground">شكراً لتعاملكم معنا!</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                ملاحظة: يرجى السداد خلال 7 أيام من تاريخ الاستحقاق لتجنب أي رسوم تأخير
-              </p>
             </div>
           </div>
         </div>
@@ -562,4 +524,3 @@ export default function Invoices() {
     </div>
   );
 }
-          

@@ -1,38 +1,42 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Database, Upload, Download, RefreshCw } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 import { DatabaseService } from './services/DatabaseService';
+import { SQLiteService } from './services/SQLiteService';
+import { Database, Download, RefreshCw } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export function DatabaseSettings() {
+  const [dbType, setDbType] = useState<string>(localStorage.getItem('dbType') || 'sqlite');
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
-  const [isConnected, setIsConnected] = useState(false);
-  const [dbType, setDbType] = useState<string>('local');
 
-  // التحقق من حالة الاتصال بقاعدة البيانات عند تحميل المكون
   useEffect(() => {
-    checkConnectionStatus();
+    setIsConnected(DatabaseService.isConnected());
   }, []);
 
-  // التحقق من حالة الاتصال بقاعدة البيانات
-  const checkConnectionStatus = () => {
-    const connected = DatabaseService.isConnected();
-    setIsConnected(connected);
+  const handleDbTypeChange = (value: string) => {
+    setDbType(value);
+    localStorage.setItem('dbType', value);
     
-    // استرجاع نوع قاعدة البيانات من التخزين المحلي
-    const savedDbType = localStorage.getItem('dbType');
-    if (savedDbType) {
-      setDbType(savedDbType);
-    }
+    // إعادة تحميل الصفحة لتطبيق التغييرات
+    toast({
+      title: "تم تغيير نوع قاعدة البيانات",
+      description: "سيتم إعادة تحميل الصفحة لتطبيق التغييرات...",
+    });
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
-  // إنشاء اتصال بقاعدة البيانات
-  const handleConnectDb = async () => {
+  const handleConnect = async () => {
+    setIsLoading(true);
+    
     try {
       const connected = await DatabaseService.connect();
       setIsConnected(connected);
@@ -45,174 +49,142 @@ export function DatabaseSettings() {
       } else {
         toast({
           title: "فشل الاتصال",
-          description: "تعذر الاتصال بقاعدة البيانات، يرجى المحاولة مرة أخرى",
+          description: "تعذر الاتصال بقاعدة البيانات",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('خطأ في الاتصال بقاعدة البيانات:', error);
+      console.error("خطأ في الاتصال:", error);
       toast({
         title: "خطأ في الاتصال",
         description: "حدث خطأ أثناء محاولة الاتصال بقاعدة البيانات",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // قطع الاتصال بقاعدة البيانات
-  const handleDisconnectDb = () => {
-    try {
-      DatabaseService.disconnect();
-      setIsConnected(false);
-      
-      toast({
-        title: "تم قطع الاتصال",
-        description: "تم قطع الاتصال بقاعدة البيانات بنجاح",
-      });
-    } catch (error) {
-      console.error('خطأ في قطع الاتصال بقاعدة البيانات:', error);
-      toast({
-        title: "خطأ في قطع الاتصال",
-        description: "حدث خطأ أثناء محاولة قطع الاتصال بقاعدة البيانات",
-        variant: "destructive",
-      });
-    }
+  const handleDisconnect = () => {
+    DatabaseService.disconnect();
+    setIsConnected(false);
+    toast({
+      title: "تم قطع الاتصال",
+      description: "تم قطع الاتصال بقاعدة البيانات بنجاح",
+    });
   };
 
-  // تغيير نوع قاعدة البيانات
-  const handleDbTypeChange = (value: string) => {
-    setDbType(value);
-    localStorage.setItem('dbType', value);
-  };
-
-  // تصدير قاعدة البيانات
   const handleExportDatabase = async () => {
-    try {
-      if (!isConnected) {
+    if (dbType === 'sqlite') {
+      try {
+        setIsLoading(true);
+        const data = await SQLiteService.exportDatabase();
+        
+        if (data) {
+          // إنشاء ملف للتنزيل
+          const blob = new Blob([data], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `gazatelecom_${new Date().toISOString().split('T')[0]}.db`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          toast({
+            title: "تم تصدير قاعدة البيانات",
+            description: "تم تصدير قاعدة البيانات بنجاح",
+          });
+        } else {
+          throw new Error("لا توجد بيانات للتصدير");
+        }
+      } catch (error) {
+        console.error("خطأ في تصدير قاعدة البيانات:", error);
         toast({
-          title: "غير متصل",
-          description: "يرجى الاتصال بقاعدة البيانات أولا",
+          title: "خطأ في التصدير",
+          description: "حدث خطأ أثناء محاولة تصدير قاعدة البيانات",
           variant: "destructive",
         });
-        return;
+      } finally {
+        setIsLoading(false);
       }
-      
-      // تصدير البيانات إلى ملف
-      const exportData = JSON.stringify(localStorage);
-      
-      // إنشاء ملف للتنزيل
-      const blob = new Blob([exportData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `gazatelecom_export_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      
-      // تنظيف
-      setTimeout(() => {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }, 0);
-      
+    } else {
       toast({
-        title: "تم التصدير بنجاح",
-        description: "تم تصدير قاعدة البيانات بنجاح",
-      });
-    } catch (error) {
-      console.error('خطأ في تصدير قاعدة البيانات:', error);
-      toast({
-        title: "خطأ في التصدير",
-        description: "حدث خطأ أثناء محاولة تصدير قاعدة البيانات",
+        title: "غير متاح",
+        description: "تصدير قاعدة البيانات متاح فقط لقاعدة بيانات SQLite",
         variant: "destructive",
       });
     }
   };
 
   return (
-    <Card className="border-primary/20">
+    <Card className="shadow-md">
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
           إعدادات قاعدة البيانات
         </CardTitle>
         <CardDescription>
-          إدارة خيارات الاتصال بقاعدة البيانات وتخزين البيانات
+          إدارة اتصال وإعدادات قاعدة البيانات
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-medium">حالة الاتصال</h3>
-                <p className="text-sm text-muted-foreground">قاعدة البيانات حاليًا {isConnected ? 'متصلة' : 'غير متصلة'}</p>
-              </div>
-              <Switch 
-                checked={isConnected} 
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    handleConnectDb();
-                  } else {
-                    handleDisconnectDb();
-                  }
-                }} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="dbType">نوع قاعدة البيانات</Label>
-              <Select value={dbType} onValueChange={handleDbTypeChange}>
-                <SelectTrigger id="dbType">
-                  <SelectValue placeholder="اختر نوع قاعدة البيانات" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="local">تخزين محلي (Local Storage)</SelectItem>
-                  <SelectItem value="indexed">قاعدة بيانات متصفح (IndexedDB)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                التخزين المحلي يتم حفظه في المتصفح ولا يتطلب اتصال بالإنترنت
-              </p>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <h3 className="text-base font-medium">النسخ الاحتياطي والاستعادة</h3>
-            <div className="flex flex-col gap-2">
-              <Button 
-                variant="outline" 
-                className="justify-start" 
-                onClick={handleExportDatabase}
-                disabled={!isConnected}
-              >
-                <Download className="ml-2 h-4 w-4" />
-                تصدير قاعدة البيانات
-              </Button>
-              <Button 
-                variant="outline" 
-                className="justify-start"
-                disabled={!isConnected}
-              >
-                <Upload className="ml-2 h-4 w-4" />
-                استيراد قاعدة البيانات
-              </Button>
-              <Button 
-                variant="outline" 
-                className="justify-start"
-                disabled={!isConnected}
-              >
-                <RefreshCw className="ml-2 h-4 w-4" />
-                إعادة تعيين قاعدة البيانات
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              تنبيه: إعادة التعيين ستمحو جميع البيانات الحالية ولا يمكن التراجع عن هذا الإجراء
-            </p>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="db-type">نوع قاعدة البيانات</Label>
+          <Select value={dbType} onValueChange={handleDbTypeChange}>
+            <SelectTrigger id="db-type">
+              <SelectValue placeholder="اختر نوع قاعدة البيانات" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="local">التخزين المحلي (للتجربة فقط)</SelectItem>
+              <SelectItem value="sqlite">SQLite (موصى به)</SelectItem>
+              <SelectItem value="remote">خادم بعيد (قريبًا)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="pt-2">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <p>{isConnected ? 'متصل' : 'غير متصل'}</p>
           </div>
         </div>
       </CardContent>
+      <CardFooter className="flex justify-between">
+        <div className="flex gap-2">
+          {isConnected ? (
+            <Button 
+              variant="outline" 
+              onClick={handleDisconnect}
+              disabled={isLoading}
+            >
+              قطع الاتصال
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleConnect}
+              disabled={isLoading}
+              className="gap-1"
+            >
+              {isLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
+              الاتصال بقاعدة البيانات
+            </Button>
+          )}
+        </div>
+        
+        {dbType === 'sqlite' && (
+          <Button 
+            variant="secondary" 
+            onClick={handleExportDatabase}
+            disabled={isLoading || !isConnected}
+            className="gap-1"
+          >
+            <Download className="h-4 w-4" />
+            تصدير قاعدة البيانات
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 }
