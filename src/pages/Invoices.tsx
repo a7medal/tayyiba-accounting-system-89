@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileSearch, Download, Edit, Printer, ArrowLeft, Phone, Globe, MapPin } from 'lucide-react';
@@ -469,10 +470,9 @@ export default function Invoices() {
                   <p className="text-center text-sm mt-1">رقم السجل الضريبي: 123456789</p>
                 </div>
               </div>
-                  <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>نواكشوط، موريتانيا</span>
-                </div>
+              <div className="flex items-center gap-2 mt-4">
+                <MapPin className="h-4 w-4" />
+                <span>نواكشوط، موريتانيا</span>
               </div>
             </div>
 
@@ -562,4 +562,3 @@ export default function Invoices() {
     </div>
   );
 }
-          
