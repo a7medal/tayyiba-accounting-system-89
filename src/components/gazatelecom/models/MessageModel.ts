@@ -48,8 +48,6 @@ export interface Account {
   id: string;
   name: string;
   balance: number;
-  type?: string;
-  description?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,10 +58,6 @@ export interface AccountTransaction {
   amount: number;
   type: TransactionType;
   description?: string;
-  transactionType?: string;
-  toAccountId?: string;
-  reference?: string;
-  timestamp?: string;
   createdAt: string;
 }
 
@@ -71,12 +65,9 @@ export interface Debt {
   id: string;
   entityId: string;
   entityType: 'client' | 'supplier';
-  entityName?: string;
   amount: number;
   remainingAmount: number;
   description: string;
-  reference?: string;
-  status?: string;
   createdAt: string;
   dueDate?: string;
 }
@@ -86,10 +77,6 @@ export interface DebtPayment {
   debtId: string;
   amount: number;
   date: string;
-  paymentDate?: string;
-  method?: string;
-  reference?: string;
-  note?: string;
   notes?: string;
 }
 
