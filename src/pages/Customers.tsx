@@ -1,9 +1,19 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Clients from './Clients';
 
 export default function Customers() {
-  // Simply render the Clients page since it has the client management functionality
-  return <Clients />;
+  return (
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold mb-6">العملاء</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>إدارة العملاء</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>سيتم إضافة محتوى صفحة العملاء قريباً</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
