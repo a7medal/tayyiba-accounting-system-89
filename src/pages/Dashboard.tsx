@@ -6,7 +6,7 @@ import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { InvoiceStatus } from '@/components/dashboard/InvoiceStatus';
 
 // استيراد بيانات المنتجات للاستخدام في لوحة التحكم
-import { mockProducts } from '@/components/products/ProductData';
+// import { mockProducts } from '@/components/products/ProductData'; // تم التعليق، سنستخدم قيمًا ثابتة مؤقتًا
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,39 +25,29 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    // حساب البيانات الإحصائية استنادًا إلى بيانات المنتجات
-    const calculateData = () => {
-      // حساب إجمالي الإيرادات من المبيعات (عدد المنتجات × السعر)
-      const totalRevenue = mockProducts.reduce((sum, product) => {
-        return sum + (product.price * Math.floor(product.stock * 0.7)); // افتراض أن 70% من المخزون تم بيعه
-      }, 0);
-      
-      // حساب إجمالي التكاليف
-      const totalCost = mockProducts.reduce((sum, product) => {
-        return sum + (product.cost * Math.floor(product.stock * 0.7)); // نفس نسبة المبيعات
-      }, 0);
-      
-      // حساب الربح الصافي
+    // استخدام بيانات ثابتة مؤقتًا بدلًا من الاعتماد على mockProducts
+    const loadDashboardData = () => {
+      // قيم ثابتة مؤقتة للإحصائيات
+      const totalRevenue = 550000; // مثال: إجمالي إيرادات ثابت
+      const totalCost = 320000;    // مثال: إجمالي تكاليف ثابت
       const netProfit = totalRevenue - totalCost;
+
+      const revenueTrend = 12.5; 
+      const expensesTrend = -3.2; 
+      const profitTrend = 18.3; 
       
-      // توليد اتجاهات عشوائية واقعية
-      const revenueTrend = 12.5; // نسبة نمو الإيرادات
-      const expensesTrend = -3.2; // نسبة انخفاض المصروفات
-      const profitTrend = 18.3; // نسبة نمو الأرباح
-      
-      // عدد الفواتير
       const invoiceCount = {
-        paid: 15,
-        pending: 13,
-        total: 28
+        paid: 15, // قيمة ثابتة
+        pending: 13, // قيمة ثابتة
+        total: 28   // قيمة ثابتة
       };
       
       setRevenueData({
-        total: Math.round(totalRevenue),
+        total: totalRevenue,
         trend: revenueTrend,
-        expenses: Math.round(totalCost),
+        expenses: totalCost,
         expensesTrend: expensesTrend,
-        profit: Math.round(netProfit),
+        profit: netProfit,
         profitTrend: profitTrend,
         invoiceCount
       });
@@ -66,8 +56,8 @@ export default function Dashboard() {
     };
     
     const timer = setTimeout(() => {
-      calculateData();
-    }, 1000);
+      loadDashboardData();
+    }, 500); // تقليل المهلة قليلًا
     
     return () => clearTimeout(timer);
   }, []);
